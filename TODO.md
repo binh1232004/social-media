@@ -1,3 +1,5 @@
+# STUDY
+1. Đồng bộ với MySQL + Django sau khi đã thiết kế xong
 # Chức năng cơ bản
 
     1. Đăng ký và Đăng nhập: Cho phép người dùng tạo tài khoản, đăng nhập và quản lý hồ sơ cá nhân.
@@ -22,8 +24,8 @@
 Django + Mysql</br>
 API documentation</br>
 Websocket
-## Fontend
-HTML, CSS (Bootstrap), JS
+## Frontend
+React + NextJS
 ## Server
 Microsoft Asure cho các file media, cơ sở dữ liệu và API.</br>
 Docker
