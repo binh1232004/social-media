@@ -1,10 +1,10 @@
-'use client'
-import Login from "./containers/login";
 
 export default function Home() {
   return (
    <div>
-      <Login></Login> 
+      <h1 className="text-white">
+          Đang tiến hàng bảo trì và phát triển 
+      </h1>
    </div> 
   );
 }
