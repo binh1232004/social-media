@@ -1,11 +1,11 @@
 # NOTE
-1. DATE will be displayed as DD/MM/YYYY
+1. DATE will be displayed as YYYY-MM-DD
 2. FOREIGN KEY: group_id in post can be null
 3. password(varchar(50)), username(nvarchar(255))  in user.
 4. title(nvarchar(255)) in group 
 # SCHEMA
 Bảng user:
-    id (INT, primary key): ID của người dùng.
+    id (INT, primary key): ID của người dùng. Đặt tự động tăng cao
 
     given_name (NVARCHAR)
 
@@ -15,17 +15,17 @@ Bảng user:
 
     birthday (DATE): Ngày sinh của người dùng.
 
-    role (ENUM): Vai trò của người dùng trong nhóm (có thể là 'admin', 'member').
+    role (ENUM): Vai trò của người dùng trong nhóm (có thể là 'admin', 'member'). 
 
     email (VARCHAR, unique): Email của người dùng, phải duy nhất.
 
-    gender (ENUM): Giới tính của người dùng (có thể là 'male', 'female', 'others').
+    gender (ENUM): Giới tính của người dùng (có thể là 'male', 'female').
 
-    created_at (TIMESTAMP): Thời gian tạo tài khoản.
+    created_at (TIMESTAMP): Thời gian tạo tài khoản. Đặt tự động
 
-    profile_image_url (VARCHAR): Đường dẫn đến ảnh đại diện của người dùng.
+    profile_image_url (VARCHAR): Đường dẫn đến ảnh đại diện của người dùng. Có thể null được
 
-    biography (TEXT): Mô tả ngắn gọn về người dùng.
+    biography (TEXT): Mô tả ngắn gọn về người dùng. Có thể null được
 
 Bảng group:
 	id (INT, primary key): ID của nhóm.

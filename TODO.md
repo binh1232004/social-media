@@ -1,5 +1,5 @@
 # STUDY
-1. Đồng bộ với MySQL + Django sau khi đã thiết kế xong
+1. Handle error in nodejs (https://sematext.com/blog/node-js-error-handling/)
 # Chức năng cơ bản
 
     1. Đăng ký và Đăng nhập: Cho phép người dùng tạo tài khoản, đăng nhập và quản lý hồ sơ cá nhân.
