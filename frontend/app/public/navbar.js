@@ -8,11 +8,11 @@ export default function NavBar(){
       <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
         <a href="#" class="flex items-center space-x-3 rtl:space-x-reverse ml-4">
           <Image 
-            src="/fbLogo.png" 
-            width={40} height={40} alt="Facebook Logo"
+            src="/community.png" 
+            width={40} height={40} alt="community_logo"
           />
           <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
-            Facebook
+            Social network
           </span>
         </a>
         <div class="flex md:order-2">
