@@ -68,7 +68,7 @@ export default function messageBar(){
          <li>
          <a href="#" class="flex items-center p-2 text-gray-900 transition duration-75 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group">
                <img class="flex-shrink-0 w-7 h-7 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" 
-                  src="/group.png"
+                  src="/add.png"
                />
                <span class="ms-3">Thêm nhóm chat</span>
             </a>
