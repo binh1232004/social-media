@@ -3,7 +3,7 @@ FROM node:latest
 WORKDIR /usr/app
 
 
-COPY . .
+COPY frontend/ .
 
 # Using this instead of npm i for install exact version of dependencies in package-lock.json
 RUN pwd
