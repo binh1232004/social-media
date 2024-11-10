@@ -25,4 +25,4 @@ jobs:
       with:
         push: true
         tags: ${{ secrets.ACR_ENDPOINT }}/myapp:latest
-        file: /frontend/Dockerfile
+        file: ../../frontend/Dockerfile
