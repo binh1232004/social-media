@@ -1,9 +1,8 @@
 'use client';
 import { useState } from 'react';
 
-import Utils from '../utils';
+import {isCorrectEmail, isFalsyValue, isPasswordMatchRepassword} from '../utils';
 export default function useSignUp() {
-    const utils = new Utils();
 
     const [formData, setFormData] = useState({
         password: null,
@@ -39,16 +38,16 @@ export default function useSignUp() {
         }));
     };
     const handleSubmit = (e) => {
-        if (utils.isFalsyValue(formData)) {
+        if (isFalsyValue(formData)) {
             setFormError(errorEmptyInput);
             return;
         }
-        if (!utils.isCorrectEmail(formData.email)) {
+        if (!isCorrectEmail(formData.email)) {
             setFormError(errorEmailStructure);
             return;
         }
         if (
-            !utils.isPasswordMatchRepasword(
+            !isPasswordMatchRepasword(
                 formData.password,
                 formData.repassword,
             )
