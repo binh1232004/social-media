@@ -11,7 +11,7 @@ import {
 import useSWR from 'swr';
 import Link from 'next/link';
 
-export default function SignIn() {
+export default function SignUp() {
     const SUBMIT_LABEL = 'Đăng ký';
     const SURNAME_LABEL = 'Họ + Tên Đệm';
     const GIVEN_NAME_LABEL = 'Tên chính';
