@@ -47,7 +47,7 @@ export default function useSignUp() {
             return;
         }
         if (
-            !isPasswordMatchRepasword(
+            !isPasswordMatchRepassword(
                 formData.password,
                 formData.repassword,
             )
