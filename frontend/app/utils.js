@@ -1,22 +1,24 @@
-export default class Utils{
-    /**
-     * 
-     * @param {String} email 
-     * @returns {Boolean} email must have structure of {*(.student).hcmue.edu.vn}
-     */
-    isCorrectEmail (email)  {
-        return /^.+@(student\.)?hcmue\.edu\.vn$/.test(email);
-    }
-    isPasswordMatchRepasword  (password, repassword)  {
-        return password === repassword;
-    }
+/**
+ * @param {String} email 
+ * @returns {Boolean} email must have structure of {*(.student).hcmue.edu.vn}
+ */
+export const isCorrectEmail = (email) => {
+    return /^.+@(student\.)?hcmue\.edu\.vn$/.test(email);
+};
 
-    /**
-     * 
-     * @param {Object} obj 
-     * @returns {Boolean} check if at least one item's value is falsy
-     */
-    isFalsyValue(obj){
-        return Object.values(obj).some(( value ) => !value);
-    }
-}
+/**
+ * @param {String} password 
+ * @param {String} repassword
+ * @returns {Boolean} 
+ */
+export const isPasswordMatchRepassword = (password, repassword) => {
+    return password === repassword;
+};
+
+/**
+ * @param {Object} obj 
+ * @returns {Boolean} check if at least one item's value is falsy
+ */
+export const isFalsyValue = (obj) => {
+    return Object.values(obj).some((value) => !value);
+};
