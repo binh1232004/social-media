@@ -1,12 +1,15 @@
 name: Run tests
 
+# Event trigger when having a pull request
 on:
   pull_request:
     branches: ['main']
 
+# One job: test
 jobs:
   tests:
     runs-on: ubuntu-latest
+    # Run every ci/cd on frontend folder
     defaults:
       run:
         working-directory: ./frontend
