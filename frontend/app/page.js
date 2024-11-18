@@ -7,7 +7,11 @@ export default function Home() {
     //         Đang tiến hàng bảo trì và phát triển 
     //     </h1>
     // </div>
-    <HomePage/>
+    <div>
+      <h1>teest ci/cd</h1>
+      <HomePage/>
+
+    </div>
    
   );
 }
