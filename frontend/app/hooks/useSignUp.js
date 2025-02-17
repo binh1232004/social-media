@@ -37,7 +37,30 @@ export default function useSignUp() {
             [name]: Boolean(value.trim()),
         }));
     };
-    const handleSubmit = (e) => {
+    const fetchDataBackend = async () =>{
+        debugger;
+        try{ 
+            const copyFormData = JSON.parse(JSON.stringify(formData));
+            delete copyFormData.repassword;
+            const response = await fetch(process.env.NEXT_PUBLIC_FQDN_BACKEND + "/auth/signUp",{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(copyFormData)
+            })
+            if (!response.ok) {
+                // If not successful, parse the error message from the response
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Something went wrong");
+            }
+            // BUG: JSON.parse: unexpected character at line 1 column 1 of the JSON data
+        }catch(e){
+            console.error(e);
+            return e.message;
+        }
+    }
+    const handleSubmit = async (e) => {
         if (isFalsyValue(formData)) {
             setFormError(errorEmptyInput);
             return;
@@ -55,10 +78,10 @@ export default function useSignUp() {
             setFormError(errorPasswordMismatch);
             return;
         }
-        // // // Handle form submission with formData
-        console.log('Form Data:', formData);
+        const message = await fetchDataBackend();
+        console.log(message);
+        // setFormError(message.message);
     };
-
     return {
         formData,
         formValidation,

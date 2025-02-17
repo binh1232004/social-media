@@ -1,4 +1,4 @@
-const userModel = require('../user/user.model');
+const userMethod = require('../user/user.method');
 const bcrypt = require('bcrypt');
 const Utils = require('../utils')
 const utils = new Utils();
@@ -8,7 +8,7 @@ exports.signUp = async (req, res) => {
     const SALT_ROUND = 10;
     const email = req.body.email;
     const password = req.body.password;
-    const user = await userModel.getUserByEmail(email);
+    const user = await userMethod.getUserByEmail(email);
     if(!utils.isCorrectEmail(email))
         return res.status(409).send('Email  phải là của trường HCMUE');
     if (user.length !== 0)
@@ -23,9 +23,10 @@ exports.signUp = async (req, res) => {
             birthday: req.body.birthday,
             gender: req.body.gender 
         }
-        const isCreatedUser = await userModel.createUser(user);
+        const isCreatedUser = await userMethod.createUser(user);
+        console.log(isCreatedUser);
         if(isCreatedUser)
-            return res.status(201).send('User đã được tạo');
+            return res.status(201).send('User tạo thành công');
         else
             return res.status(400).send('Có lỗi khi tạo user');
     }

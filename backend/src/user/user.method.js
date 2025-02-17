@@ -1,5 +1,5 @@
 const TABLENAME  = 'user';
-const createConnection = require('./user.db');
+const createConnection = require('../connection.db');
 const userSchema = require('./user.schema');
 const addFormats = require('ajv-formats');
 const Ajv = require('ajv');

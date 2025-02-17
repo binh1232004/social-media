@@ -21,8 +21,7 @@
 
 # Công nghệ
 ## Backend
-Django + Mysql</br>
-API documentation</br>
+Nodejs
 Websocket
 ## Frontend
 React + NextJS
@@ -30,6 +29,8 @@ React + NextJS
 Microsoft Asure cho các file media, cơ sở dữ liệu và API.</br>
 Docker
 ## Storage
-Gitlab
+Github
 # Word
 Viết word cùng với tiến trình của nhóm làm
+# BUG
+Frontend useSignUp.js line 50
