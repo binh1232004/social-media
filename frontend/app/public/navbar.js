@@ -1,10 +1,17 @@
 'use client';
 import React from "react";
 import Image from "next/image";
+import { useState } from "react";
+import { socket } from "@/socket";
 
 export default function NavBar(){
+  const [currentID, setCurrentID] = useState(0);
+  const handleClickID = () => {
+    socket.emit("registerCurrentID", currentID);
+    console.log(currentID);
+  }
   return(
-    <nav class="fixed bg-white dark:bg-gray-900 w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
+    <nav class="fixed bg-slate-600 dark:bg-gray-900 w-full z-20 top-0 start-0 ">
       <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
         <a href="#" class="flex items-center space-x-3 rtl:space-x-reverse ml-4">
           <Image 
@@ -15,6 +22,12 @@ export default function NavBar(){
             Social network
           </span>
         </a>
+        <div>
+          <input type="number" class="rounded-full  h-10 px-4"   onChange={(e)=> setCurrentID(e.target.value)} placeholder="Search..."/>
+          <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleClickID}>
+            ID
+          </button>
+        </div>
         <div class="flex md:order-2">
           <button className="mr-2 w-10 h-10 rounded-full flex justify-center items-center hover:bg-blue-900 hover:ring-sky-500 bg-neutral-500">
             <a href="#" class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">
@@ -37,8 +50,8 @@ export default function NavBar(){
             </a>
           </button>
         </div>
-        <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-sticky">
-          <ul class="flex flex-col p-4 md:p-0 mt-4 font-medium border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+        <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1 " id="navbar-sticky">
+          <ul class="flex flex-col p-4 md:p-0 mt-4 font-medium rounded  bg-slate-400 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 ">
             <li className="cursor-pointer w-20 h-12 rounded-lg flex justify-center items-center hover:bg-sky-500 hover:ring-sky-500">
               <a href="#" class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">
                 <Image src={"/home.png"} width={30} height={30}/>
