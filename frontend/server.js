@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
 
+const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
 const port = 3000;
 // when using middleware `hostname` and `port` must be provided below
@@ -14,7 +15,16 @@ app.prepare().then(() => {
   const io = new Server(httpServer);
 
   io.on("connection", (socket) => {
-    // ...
+    socket.on('register', ({currentID, targetID}) => {
+      console.log(currentID, targetID);
+      socket.join(currentID);
+      socket.targetID = targetID;
+      socket.currentID = currentID;
+    });
+    socket.on("chat", (msg) => {
+        console.log("chat event")
+        io.to(socket.targetID).emit("receiveMsg", msg);
+    })
   });
 
   httpServer
