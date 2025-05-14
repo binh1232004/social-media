@@ -9,11 +9,11 @@ import {
 import useSWR from 'swr';
 import Link from 'next/link';
 
-export default function SignIn() {
-    const {
+export default function SignIn() {    const {
         email,
         password,
         error,
+        loading,
         validateEmail,
         validatePassword,
         handlePasswordChange,
@@ -56,9 +56,8 @@ export default function SignIn() {
                         label={PASSWORD_LABEL}
                         isValid={validatePassword}
                         value={password}
-                    />
-                    <p className="text-red-400">{error}</p>
-                    <InputSubmit label={SUBMIT_LABEL} />
+                    />                    <p className="text-red-400">{error}</p>
+                    <InputSubmit label={loading ? 'Đang xử lý...' : SUBMIT_LABEL} disabled={loading} />
                 </div>
                 <p className="text-white mt-2 text-base">
                     Hoặc

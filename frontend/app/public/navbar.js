@@ -3,52 +3,50 @@ import React from "react";
 import Image from "next/image";
 import { useState } from "react";
 import { socket } from "@/socket";
+import UserAvatar from "../components/UserAvatar";
 
 export default function NavBar(){
   const [currentID, setCurrentID] = useState(0);
   const handleClickID = () => {
     socket.emit("registerCurrentID", currentID);
     console.log(currentID);
-  }
+  };
+  
   return(
     <nav class="fixed bg-slate-600 dark:bg-gray-900 w-full z-20 top-0 start-0 ">
       <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
-        <a href="#" class="flex items-center space-x-3 rtl:space-x-reverse ml-4">
+        <a href="/home" class="flex items-center space-x-3 rtl:space-x-reverse ml-4">
           <Image 
             src="/community.png" 
-            width={40} height={40} alt="community_logo"
+            width={40} height={40} alt="Community Logo"
           />
           <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
             Social network
           </span>
         </a>
+        {/* 
+        This is for old ID mid term
         <div>
           <input type="number" class="rounded-full  h-10 px-4"   onChange={(e)=> setCurrentID(e.target.value)} placeholder="Search..."/>
           <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleClickID}>
             ID
           </button>
-        </div>
-        <div class="flex md:order-2">
-          <button className="mr-2 w-10 h-10 rounded-full flex justify-center items-center hover:bg-blue-900 hover:ring-sky-500 bg-neutral-500">
+        </div> */}
+        <div class="flex md:order-2">          <button className="mr-2 w-10 h-10 rounded-full flex justify-center items-center hover:bg-blue-900 hover:ring-sky-500 bg-neutral-500">
             <a href="#" class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">
-              <Image src={"/menu.png"} width={25} height={25}/>
+              <Image src={"/menu.png"} width={25} height={25} alt="Menu" />
             </a>
           </button>
           <button className="mr-2 w-10 h-10 rounded-full flex justify-center items-center hover:bg-blue-900 hover:ring-sky-500 bg-neutral-500">
             <a href="#" class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">
-              <Image src={"/messenger.png"} width={25} height={25}/>
+              <Image src={"/messenger.png"} width={25} height={25} alt="Messages" />
             </a>
           </button>
           <button className="mr-2 w-10 h-10 rounded-full flex justify-center items-center hover:bg-blue-900 hover:ring-sky-500 bg-neutral-500">
             <a href="#" class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">
-              <Image src={"/bell.png"} width={25} height={25}/>
+              <Image src={"/bell.png"} width={25} height={25} alt="Notifications" />
             </a>
-          </button>
-          <button className="mr-2 w-10 h-10 rounded-full flex justify-center items-center hover:bg-blue-900 hover:ring-sky-500 bg-neutral-500">
-            <a href="#" class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">
-              <Image src={"/avatar.png"} width={30} height={30}/>
-            </a>
-          </button>
+          </button><UserAvatar />
         </div>
         <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1 " id="navbar-sticky">
           <ul class="flex flex-col p-4 md:p-0 mt-4 font-medium rounded  bg-slate-400 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 ">

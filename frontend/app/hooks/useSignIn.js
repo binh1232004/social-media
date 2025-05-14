@@ -1,11 +1,13 @@
 'use client';
 import { useState } from 'react';
+import { setAuthToken } from '../utils/auth';
 export default function useSignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [validateEmail, setValidateEmail] = useState(true);
   const [validatePassword, setValidatePassword] = useState(true);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const errorEmptyInput = 'Vui lòng nhập hết tất cả trường dữ liệu!';
   const handleEmailChange = (e) => {
@@ -29,6 +31,7 @@ export default function useSignIn() {
       
       try {
           // Show loading state
+          setLoading(true);
           setError('Đang đăng nhập...');
           
           // Prepare the login data
@@ -52,14 +55,27 @@ export default function useSignIn() {
             if (response.ok) {
               // Login successful
               console.log('Login successful:', data);
+                // Log the full data to help identify where the token is
+              console.log('Full login response data:', JSON.stringify(data, null, 2));
               
-              // Save token if present
-              if (data.token) {
-                  localStorage.setItem('token', data.token);
+              // Look for token in various locations based on your API response
+              const token = data.token || data.accessToken || data.access_token || 
+                           (data.data && (data.data.token || data.data.accessToken || data.data.access_token));
+              
+              if (token) {
+                  // Save token
+                  const tokenInfo = setAuthToken(token);
+                  console.log('Token saved, expires:', tokenInfo.expiryDate);
+                  
+                  // Display success message
+                  setError('');
+                  
+                  // Redirect to home page
+                  window.location.href = '/home';
+              } else {
+                  console.warn('Login successful but no token received', data);
+                  setError('Đăng nhập thành công nhưng không nhận được token.');
               }
-              
-              // Redirect to home page
-              window.location.href = '/home';
           } else {
               // Login failed
               setError(data.message || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
@@ -68,9 +84,10 @@ export default function useSignIn() {
       } catch (err) {
           console.error('Login error:', err);
           setError('Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại sau.');
+      } finally {
+          setLoading(false);
       }
-  };
-  return {
+  };  return {
       email,
       password,
       validateEmail,
@@ -78,6 +95,7 @@ export default function useSignIn() {
       handleEmailChange,
       handlePasswordChange,
       error,
+      loading,
       handleSubmit,
   };
 }
