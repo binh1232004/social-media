@@ -42,19 +42,20 @@ export default function SignIn() {
             >
                 <h1 className="text-white text-4xl font-bold text-center mb-6">
                     Đăng nhập
-                </h1>
-                <div className="flex flex-col justify-center items-center space-y-3">
+                </h1>                <div className="flex flex-col justify-center items-center space-y-3">
                     <InputText
                         name="email"
                         onChangeEvent={handleEmailChange}
                         label={EMAIL_LABEL}
                         isValid={validateEmail}
+                        value={email}
                     />
                     <InputPassword
                         name="password"
                         onChangeEvent={handlePasswordChange}
                         label={PASSWORD_LABEL}
                         isValid={validatePassword}
+                        value={password}
                     />
                     <p className="text-red-400">{error}</p>
                     <InputSubmit label={SUBMIT_LABEL} />
