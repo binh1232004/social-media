@@ -7,23 +7,33 @@ import {
     InputRadioButton,
     InputSubmit,
     InputText,
+    InputOTP,
 } from '../components/login_signup';
 import useSWR from 'swr';
 import Link from 'next/link';
 
 export default function SignUp() {
-    const SUBMIT_LABEL = 'Đăng ký';
-    const SURNAME_LABEL = 'Họ + Tên Đệm';
-    const GIVEN_NAME_LABEL = 'Tên chính';
-    const BIRTH_LABEL = 'Ngày sinh';
-    const FEMALE_LABEL = 'Nữ';
+    const SUBMIT_LABEL = 'Đăng ký';
+    const SURNAME_LABEL = 'Họ + Tên Đệm';
+    const GIVEN_NAME_LABEL = 'Tên chính';
+    const BIRTH_LABEL = 'Ngày sinh';
+    const FEMALE_LABEL = 'Nữ';
     const MALE_LABEL = 'Nam';
-    const EMAIL_LABEL = 'Email của trường';
-    const PASSWORD_LABEL = 'Mật khẩu';
-    const REPASSWORD_LABEL = 'Nhập lại mật khẩu';
-
-    const { formData, formValidation, formError, handleChange, handleSubmit } =
-        useSignUp();
+    const EMAIL_LABEL = 'Email của trường';
+    const PASSWORD_LABEL = 'Mật khẩu';
+    const REPASSWORD_LABEL = 'Nhập lại mật khẩu';    const { 
+        formData, 
+        formValidation, 
+        formError,
+        formSuccess,
+        isSubmitting, 
+        showOtpForm,
+        autoSubmitting,
+        handleChange, 
+        handleSubmit,
+        resetOtpForm,
+        handleOtpComplete
+    } = useSignUp();
     return (
         <div className="relative w-screen h-screen">
             <Image
@@ -42,74 +52,146 @@ export default function SignUp() {
                 }}
             >
                 <h1 className="text-white text-4xl font-bold text-center mb-6">
-                    Đăng ký
+                    {showOtpForm ? 'Xác thực OTP' : 'Đăng ký'}
                 </h1>
                 <div className="flex flex-col justify-center items-center space-y-3">
-                    <div className="flex flex-row space-x-1 w-full">
-                        <InputText
-                            name={'surname'}
-                            onChangeEvent={handleChange}
-                            label={SURNAME_LABEL}
-                            isValid={formValidation.surname}
-                        />
-                        <InputText
-                            name="givenName"
-                            onChangeEvent={handleChange}
-                            label={GIVEN_NAME_LABEL}
-                            isValid={formValidation.givenName}
-                        />
-                    </div>
-
-                    <InputDate
-                        name={'birthday'}
-                        onChangeEvent={handleChange}
-                        label={BIRTH_LABEL}
-                        isValid={formValidation.birthday}
-                    />
-                    <div className="w-full">
-                        <h2 className="text-white mt-2 mb-1 text-sm">
-                            Giới tính
-                        </h2>
-                        <div className="w-full flex flex-row space-x-1">
-                            <InputRadioButton
-                                name={'gender'}
+                    {showOtpForm ? (
+                        /* OTP Verification Form */
+                        <>                <div className={`${autoSubmitting ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-700'} p-3 rounded-md w-full mb-2`}>
+                                <p className="font-semibold">Email đã được đăng ký!</p>
+                                <p className="text-sm">
+                                    Vui lòng kiểm tra email của bạn để lấy mã xác thực OTP.
+                                </p>
+                                <p className="text-sm font-semibold mt-1">
+                                    {autoSubmitting 
+                                        ? 'Đang xác thực mã OTP...' 
+                                        : 'Mã OTP sẽ tự động xác thực khi bạn nhập đủ 6 chữ số.'}
+                                </p>
+                            </div><InputOTP 
+                                name={'otp'}
                                 onChangeEvent={handleChange}
-                                label={MALE_LABEL}
-                                value={'male'}
-                                isValid={formValidation.gender}
+                                isValid={formValidation.otp}
+                                value={formData.otp}
+                                onComplete={handleOtpComplete}
                             />
-                            <InputRadioButton
-                                name={'gender'}
-                                onChangeEvent={handleChange}
-                                label={FEMALE_LABEL}
-                                value={'female'}
-                                isValid={formValidation.gender}
-                            />
-                        </div>
-                    </div>
+                              
+                            {autoSubmitting && (
+                                <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mt-2">
+                                    <p className="text-sm md:text-base flex items-center justify-center">
+                                        <span className="animate-spin mr-2">⟳</span> Đang xác thực OTP...
+                                    </p>
+                                </div>
+                            )}
+                              
+                            {formError && (
+                                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                                    <p className="text-sm md:text-base">
+                                        {formError}
+                                    </p>
+                                </div>
+                            )}
 
-                    <InputText
-                        name={'email'}
-                        onChangeEvent={handleChange}
-                        label={EMAIL_LABEL}
-                        isValid={formValidation.email}
-                    />
-                    <InputPassword
-                        name={'password'}
-                        onChangeEvent={handleChange}
-                        label={PASSWORD_LABEL}
-                        isValid={formValidation.password}
-                    />
-                    <InputPassword
-                        name={'repassword'}
-                        onChangeEvent={handleChange}
-                        label={REPASSWORD_LABEL}
-                        isValid={formValidation.repassword}
-                    />
-                    <p className="text-sm text-red-400 md:text-base">
-                        {formError}
-                    </p>
-                    <InputSubmit label={SUBMIT_LABEL} />
+                            {formSuccess && (
+                                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                                    <p className="text-sm md:text-base flex items-center justify-center">
+                                        <span className="mr-2">✓</span> {formSuccess}
+                                    </p>
+                                </div>
+                            )}
+                              <InputSubmit 
+                                label={isSubmitting ? 'Đang xử lý...' : 'Xác thực OTP'} 
+                                disabled={isSubmitting || autoSubmitting} 
+                            />
+                            
+                            <button
+                                type="button"
+                                onClick={resetOtpForm}
+                                className="text-white underline mt-2"
+                                disabled={isSubmitting || autoSubmitting || formSuccess}
+                            >
+                                Quay lại chỉnh sửa thông tin
+                            </button>
+                        </>
+                    ) : (
+                        /* Initial Registration Form */
+                        <>
+                            <div className="flex flex-row space-x-1 w-full">                                <InputText
+                                    name={'surname'}
+                                    onChangeEvent={handleChange}
+                                    label={SURNAME_LABEL}
+                                    isValid={formValidation.surname}
+                                    value={formData.surname}
+                                />
+                                <InputText
+                                    name="givenName"
+                                    onChangeEvent={handleChange}
+                                    label={GIVEN_NAME_LABEL}
+                                    isValid={formValidation.givenName}
+                                    value={formData.givenName}
+                                />
+                            </div>                            <InputDate
+                                name={'birthday'}
+                                onChangeEvent={handleChange}
+                                label={BIRTH_LABEL}
+                                isValid={formValidation.birthday}
+                                value={formData.birthday}
+                            />
+                            <div className="w-full">
+                                <h2 className="text-white mt-2 mb-1 text-sm">
+                                    Giới tính
+                                </h2>
+                                <div className="w-full flex flex-row space-x-1">                                    <InputRadioButton
+                                        name={'gender'}
+                                        onChangeEvent={handleChange}
+                                        label={MALE_LABEL}
+                                        value={'male'}
+                                        isValid={formValidation.gender}
+                                        checked={formData.gender === 'male'}
+                                    />
+                                    <InputRadioButton
+                                        name={'gender'}
+                                        onChangeEvent={handleChange}
+                                        label={FEMALE_LABEL}
+                                        value={'female'}
+                                        isValid={formValidation.gender}
+                                        checked={formData.gender === 'female'}
+                                    />
+                                </div>
+                            </div>                            <InputText
+                                name={'email'}
+                                onChangeEvent={handleChange}
+                                label={EMAIL_LABEL}
+                                isValid={formValidation.email}
+                                value={formData.email}
+                            />
+                            <InputPassword
+                                name={'password'}
+                                onChangeEvent={handleChange}
+                                label={PASSWORD_LABEL}
+                                isValid={formValidation.password}
+                                value={formData.password}
+                            />
+                            <InputPassword
+                                name={'repassword'}
+                                onChangeEvent={handleChange}
+                                label={REPASSWORD_LABEL}
+                                isValid={formValidation.repassword}
+                                value={formData.repassword}
+                            />
+                              {formError && (
+                                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                                    <p className="text-sm md:text-base">
+                                        {formError}
+                                    </p>
+                                </div>
+                            )}
+                            
+                            <InputSubmit 
+                                label={isSubmitting ? 'Đang xử lý...' : SUBMIT_LABEL} 
+                                disabled={isSubmitting} 
+                            />
+                        </>
+                    )}
                 </div>
             </form>
         </div>

@@ -20,5 +20,7 @@ export const isPasswordMatchRepassword = (password, repassword) => {
  * @returns {Boolean} check if at least one item's value is falsy
  */
 export const isFalsyValue = (obj) => {
-    return Object.values(obj).some((value) => !value);
+    // Check if any value is null, undefined, or empty string
+    return Object.values(obj).some((value) => 
+        value === null || value === undefined || value === '');
 };
