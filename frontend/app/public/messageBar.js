@@ -1,91 +1,99 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Entity from "../components/asideChat/entity";
-import { useState } from "react";
 
 export default function MessageBar() {
     const user = 4;
-    const group = 2;
-    const [selectedEntity, setSelectedIndexEntity] = useState(null);   
+    const [selectedEntity, setSelectedIndexEntity] = useState(null);
+    const [isOpen, setIsOpen] = useState(false);
+
     const handleClickEntity = (order) => {
         setSelectedIndexEntity(order);
-    }
-    useEffect(() => {   
-        console.log("Selected entity index:", selectedEntity);  
-    }, [selectedEntity]);
-    return (
-        <aside
-            id="default-sidebar"
-            className="fixed top-16 right-0   w-72 h-full pb-16  bg-white  "
-            aria-label="Sidebar"
-        >
-            <div className="h-full px-3 py-4 hover:overflow-y-scroll py-20">
-                <a href="#" className="flex justify-between items-center mb-4">
-                    <div className="flex cursor-text">
-                        <img
-                            src="/messenger.png"
-                            className="h-6 me-3 sm:h-7 "
-                            alt="Messenger Logo"
-                        />
-                        <span className="text-xl font-semibold whitespace-nowrap dark:text-slate-500">
-                            Người liên hệ
-                        </span>
-                    </div>
-                    <div className="flex w-9 h-9 justify-center items-center rounded-full hover:bg-blue-900 hover:ring-sky-500 cursor-pointer">
-                        <img src="/search.png" className="w-6 h-6" />
-                    </div>
-                </a>
-                <ul className="space-y-2 font-medium">
-                    {[...Array(user)].map((_, index) => (
-                        <Entity
-                            key={index}
-                            name={`Full name ${index + 1}`}
-                            notificationCount={index + 1}
-                            id={index + 1}
-                            onClick={() => handleClickEntity(index + 1)}
-                            selectedIndexEntity={selectedEntity}
-                            setSelectedIndexEntity={setSelectedIndexEntity}
-                        />
-                    ))}
-                </ul>
-                <ul className="pt-4 mt-4 space-y-2 font-medium border-t border-gray-200 dark:border-gray-700">
-                    <li>
-                        <a
-                            href="#"
-                            className="flex items-center ps-2.5 mb-5 cursor-text"
-                        >
-                            <img
-                                src="/group.png"
-                                className="h-6 me-3 sm:h-7"
-                                alt="Messenger Logo"
-                            />
-                            <span className="self-center text-xl font-semibold whitespace-nowrap dark:text-slate-500">
-                                Nhóm chat
-                            </span>
-                        </a>
-                    </li>
-                    {/* {[...Array(group)].map((_, index) => (
-                        <Entity
-                            key={index}
-                            name={`group name ${index + 1}`}
-                            notificationCount={index + 1}
-                        />
-                    ))} */}
-                    <li>
-                        <a
-                            href="#"
-                            className="flex items-center p-2 text-gray-900 transition duration-75 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group"
-                        >
-                            <img
-                                className="flex-shrink-0 w-7 h-7 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                src="/add.png"
-                            />
-                            <span className="ms-3">Thêm nhóm chat</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+    };
 
-        </aside>
+    useEffect(() => {
+        console.log("Selected entity index:", selectedEntity);
+    }, [selectedEntity]);
+
+    // Close sidebar on medium+ screens
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 768) {
+                setIsOpen(false);
+            }
+        };
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    return (
+        <>
+            {/* Toggle Button - Visible only on small screens */}{" "}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="fixed top-20 right-4 z-50 md:hidden bg-gradient-to-r from-blue-500 to-blue-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            >
+                {isOpen ? (
+                    <span className="text-xl">✕</span>
+                ) : (
+                    <span className="text-xl">💬</span>
+                )}
+            </button>
+            {/* Semi-transparent overlay when sidebar is open on mobile */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                    onClick={() => setIsOpen(false)}
+                ></div>
+            )}
+            <aside
+                id="default-sidebar"
+                className={`fixed top-16 right-0 w-72 h-full pb-16 bg-white/95 backdrop-blur-sm shadow-lg z-40 transition-all duration-300 ease-in-out ${
+                    isOpen ? "translate-x-0" : "translate-x-full"
+                } md:translate-x-0 md:hidden lg:block border-l border-gray-100`}
+                aria-label="Sidebar"
+            >
+                <div className="h-full px-4 py-4 hover:overflow-y-auto py-20 scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                    {" "}
+                    <div className="sticky top-0 bg-white/95 backdrop-blur-sm pb-4 -mx-4 px-4 border-b border-gray-100">
+                        <div className="flex justify-between items-center py-2">
+                            <div className="flex items-center space-x-3">
+                                <div className="p-1.5 bg-blue-50 rounded-lg">
+                                    <img
+                                        src="/messenger.png"
+                                        className="h-6 sm:h-7 transition-transform group-hover:scale-105"
+                                        alt="Messenger Logo"
+                                    />
+                                </div>
+                                <span className="text-lg font-semibold text-gray-700">
+                                    Người liên hệ
+                                </span>
+                            </div>
+                            <div className="flex w-10 h-10 justify-center items-center rounded-full hover:bg-blue-50 transition-colors duration-200 cursor-pointer">
+                                <img
+                                    src="/search.png"
+                                    className="w-5 h-5 opacity-60 hover:opacity-100"
+                                    alt="Search"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-4 space-y-1">
+                        {[...Array(user)].map((_, index) => (
+                            <Entity
+                                key={index}
+                                name={`Full name ${index + 1}`}
+                                notificationCount={index + 1}
+                                id={index + 1}
+                                onClick={() => handleClickEntity(index + 1)}
+                                selectedIndexEntity={selectedEntity}
+                                setSelectedIndexEntity={setSelectedIndexEntity}
+                            />
+                        ))}{" "}
+                    </div>
+                </div>
+            </aside>
+        </>
     );
 }

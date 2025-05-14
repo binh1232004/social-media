@@ -1,276 +1,39 @@
 "use client";
-import React from "react";
-import NavBar from "../public/navbar";
-import MessageBar from "../public/messageBar";
+import React, { useState, useEffect } from "react";
+import FeedSection from "../components/feed/feedSection";
 
 export default function HomePage() {
-    return (
-        <div>
-            <div className="fixed">
-                <NavBar />
-            </div>
-            <div className="relative z-4">
-                <MessageBar />
-            </div>
-            {/* <main className="relative z-0 mt-20 mx-6 w-8/12  ">
-                <div class=" left-0 p-4 ">
-                    <div class="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700">
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center justify-center h-24 rounded bg-gray-50 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-center h-24 rounded bg-gray-50 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-center h-24 rounded bg-gray-50 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-center h-48 mb-4 rounded bg-gray-50 dark:bg-gray-800">
-                            <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                <svg
-                                    class="w-3.5 h-3.5"
-                                    aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 18 18"
-                                >
-                                    <path
-                                        stroke="currentColor"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M9 1v16M1 9h16"
-                                    />
-                                </svg>
-                            </p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div class="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-center h-48 mb-4 rounded bg-gray-50 dark:bg-gray-800">
-                            <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                <svg
-                                    class="w-3.5 h-3.5"
-                                    aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 18 18"
-                                >
-                                    <path
-                                        stroke="currentColor"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M9 1v16M1 9h16"
-                                    />
-                                </svg>
-                            </p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-                                <p class="text-2xl text-gray-400 dark:text-gray-500">
-                                    <svg
-                                        class="w-3.5 h-3.5"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 18 18"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 1v16M1 9h16"
-                                        />
-                                    </svg>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main> */}
-        </div>
-    );
+    const [posts, setPosts] = useState([
+        {
+            id: 1,
+            user: "John Doe",
+            avatar: "/person.png",
+            content: "Just had an amazing day at the beach! 🏖️",
+            image: "https://source.unsplash.com/random/600x400/?beach",
+            likes: 24,
+            comments: 5,
+            time: "2 hours ago"
+        },
+        {
+            id: 2,
+            user: "Jane Smith",
+            avatar: "/person.png",
+            content: "Check out my new coding project - a social media platform!",
+            likes: 42,
+            comments: 11,
+            time: "5 hours ago"
+        },
+        {
+            id: 3,
+            user: "Mike Johnson",
+            avatar: "/person.png",
+            content: "Anyone interested in going hiking this weekend?",
+            image: "https://source.unsplash.com/random/600x400/?hiking",
+            likes: 18,
+            comments: 7,
+            time: "Yesterday"
+        }
+    ]);
+
+    return <FeedSection posts={posts} />;
 }
