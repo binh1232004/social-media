@@ -9,8 +9,19 @@ const nextConfig = {
       },
     ];
   },
-  images: {
-    domains: ['res.cloudinary.com'], // Add your allowed image domains here
+   images: {
+    domains: [
+      'res.cloudinary.com', 
+      'cloudinary.com',
+      'api.cloudinary.com'
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '**',
+      }
+    ]
   },
 };
 

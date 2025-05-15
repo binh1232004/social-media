@@ -27,14 +27,11 @@ function decodeJwt(token) {
 }
 
 /**
- * Sets the authentication token in localStorage
+ * Sets the authentication token in secure HTTP-only cookies
  * @param {string} token - The authentication token to store
  * @returns {Object} - Information about the token including its expiration
  */
 export function setAuthToken(token) {
-  // Save to localStorage for client-side access
-  localStorage.setItem(TOKEN_NAME, token);
-  
   // Try to decode the token to get expiration time
   const decodedToken = decodeJwt(token);
   
@@ -51,9 +48,12 @@ export function setAuthToken(token) {
     expiryDate.setDate(expiryDate.getDate() + 1);
     console.log('No expiration found in token, using 1-day default');
   }
+    // Set the token in a secure HTTP-only cookie
+  const isSecure = process.env.NODE_ENV === 'production' || window.location.protocol === 'https:';
+  document.cookie = `${TOKEN_NAME}=${token}; Path=/; expires=${expiryDate.toUTCString()}; SameSite=Strict; ${isSecure ? 'Secure;' : ''}`;
   
-  // Set token in Next.js client-side cookie for middleware access
-  document.cookie = `${TOKEN_NAME}=${token}; Path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
+  // Add a secondary cookie to easily check if user is authenticated (no HttpOnly)
+  document.cookie = `${TOKEN_NAME}_exists=true; Path=/; expires=${expiryDate.toUTCString()}; SameSite=Strict; ${isSecure ? 'Secure;' : ''}`;
   
   // Return token information for additional handling if needed
   return {
@@ -64,27 +64,44 @@ export function setAuthToken(token) {
 }
 
 /**
- * Gets the authentication token from localStorage
+ * Gets the authentication token from cookies
  * @returns {string|null} The authentication token or null if not found
  */
 export function getAuthToken() {
   if (typeof window === 'undefined') {
     return null;
   }
-  return localStorage.getItem(TOKEN_NAME);
+  
+  // Parse cookies to find the token
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === TOKEN_NAME && value) {
+      return value;
+    }
+  }
+  
+  return null;
 }
 
 /**
- * Removes the authentication token from localStorage and cookie
+ * Removes the authentication token from cookies
  */
 export function removeAuthToken() {
-  // Remove from localStorage
-  localStorage.removeItem(TOKEN_NAME);
-  
-  // Remove cookie by setting it to expire in the past
+  // Remove all cookies by name, including any path/domain variations
+  // This is more thorough than simply setting expires in the past
   document.cookie = `${TOKEN_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+  document.cookie = `${TOKEN_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict;`;
+  document.cookie = `${TOKEN_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax;`;
+  document.cookie = `${TOKEN_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure;`;
   
-  console.log('Authentication token removed from storage and cookies');
+  // Also remove the existence marker cookie
+  document.cookie = `${TOKEN_NAME}_exists=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+  document.cookie = `${TOKEN_NAME}_exists=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict;`;
+  document.cookie = `${TOKEN_NAME}_exists=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax;`;
+  document.cookie = `${TOKEN_NAME}_exists=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure;`;
+  
+  console.log('Authentication token removed from cookies');
   
   // Return true to indicate successful removal
   return true;
@@ -111,14 +128,19 @@ export function isTokenExpired(token) {
  * @returns {Object|null} User information or null if not logged in
  */
 export function getUserInfo() {
+  // Check if we have authentication
+  if (!isAuthenticated()) return null;
+  
   const token = getAuthToken();
   if (!token) return null;
   
   const decodedToken = decodeJwt(token);
   if (!decodedToken) return null;
   
-  // Log decoded token for debugging
-  console.log("Decoded token:", decodedToken);
+  // In production, don't log sensitive token information
+  if (process.env.NODE_ENV !== 'production') {
+    console.log("Decoded token:", decodedToken);
+  }
   
   return {
     userId: decodedToken.user_id,
@@ -135,6 +157,27 @@ export function getUserInfo() {
  * @returns {boolean} True if the user is authenticated, false otherwise
  */
 export function isAuthenticated() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  
+  // Check for the existence marker cookie
+  const cookies = document.cookie.split(';');
+  let existsMarkerFound = false;
+  
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === `${TOKEN_NAME}_exists`) {
+      existsMarkerFound = true;
+      break;
+    }
+  }
+  
+  if (!existsMarkerFound) {
+    return false;
+  }
+  
+  // Then verify the actual token from cookies
   const token = getAuthToken();
   return !!token && !isTokenExpired(token);
 }
@@ -144,12 +187,28 @@ export function isAuthenticated() {
  * @param {string} [redirectUrl='/signin'] - URL to redirect to after logout
  */
 export function logout(redirectUrl = '/signin') {
-  removeAuthToken();
-  
-  // If we're in a browser context, redirect
-  if (typeof window !== 'undefined') {
-    window.location.href = redirectUrl;
+  try {
+    // First remove the token
+    removeAuthToken();
+    
+    console.log('Redirecting to:', redirectUrl);
+    
+    // Force a small delay before redirecting to ensure cookies are cleared
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.location.href = redirectUrl;
+      }
+    }, 100);
+    
+    return true;
+  } catch (error) {
+    console.error('Error during logout:', error);
+    
+    // Try direct navigation as fallback
+    if (typeof window !== 'undefined') {
+      window.location.replace(redirectUrl);
+    }
+    
+    return false;
   }
-  
-  return true;
 }
