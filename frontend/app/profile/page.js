@@ -7,15 +7,16 @@ import ProfileTabs from "../components/profile/profileTabs";
 import Toast from "../components/ui/toast";
 import useUserProfile from "../hooks/useUserProfile";
 import useUserPosts from "../hooks/useUserPosts";
-
+import { getUserInfo } from "../utils/auth";
 export default function ProfilePage() {
   // Use the custom hooks to fetch real data
+  const { userId } = getUserInfo();
   const { 
     profileData, 
     loading: profileLoading, 
     error: profileError,
     refreshProfile 
-  } = useUserProfile();
+  } = useUserProfile(userId);
   const { posts: userPosts, loading: postsLoading } = useUserPosts(profileData?.userId);
   
   const [activeTab, setActiveTab] = useState("posts");

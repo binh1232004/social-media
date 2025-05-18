@@ -8,7 +8,7 @@ import { getAuthToken, isAuthenticated, getUserInfo } from '../utils/auth';
  * Custom hook for fetching user profile data
  * @returns {Object} - Profile data and loading state
  */
-export default function useUserProfile() {
+export default function useUserProfile(userId) {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,13 +32,11 @@ export default function useUserProfile() {
       
       try {
         const token = getAuthToken();
-        // Get user info from the token to get the current user ID
-        const userInfo = getUserInfo();
         
         // If userId is not provided, use the userId from the decoded token
         // If that's not available either, use the 'me' endpoint
         let endpoint;
-        endpoint = `/api/proxy/user/${userInfo.userId}`;
+        endpoint = `/api/proxy/user/${userId}`;
         
         const response = await axios.get(endpoint, {
           headers: {

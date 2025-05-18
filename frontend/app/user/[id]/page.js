@@ -4,63 +4,76 @@ import { useParams } from "next/navigation";
 import FeedSection from "../../components/feed/feedSection";
 import ProfileHeader from "../../components/profile/profileHeader";
 import ProfileTabs from "../../components/profile/profileTabs";
+import Image from "next/image";
+import useUserProfile from "../../hooks/useUserProfile";
+import useUserPosts from "../../hooks/useUserPosts";
 
 export default function UserPage() {
   const params = useParams();
-  const userId = parseInt(params.id);
-
-  const [userData, setUserData] = useState({
-    id: userId,
-    name: "John Doe",
-    avatar: "/person.png",
-    coverPhoto: "https://source.unsplash.com/random/1200x300/?nature",
-    bio: "Software developer passionate about creating amazing user experiences",
-    location: "San Francisco, CA",
-    joinedDate: "January 2022",
-    friendCount: 420,
-    postCount: 150
-  });
-
-  const [userPosts, setUserPosts] = useState([
-    {
-      id: 1,
-      user: userData.name,
-      avatar: userData.avatar,
-      content: "Working on an exciting new project! #coding #development",
-      likes: 89,
-      comments: 12,
-      time: "2 days ago"
-    },
-    {
-      id: 2,
-      user: userData.name,
-      avatar: userData.avatar,
-      content: "Just learned something new about React!",
-      likes: 45,
-      comments: 5,
-      time: "1 week ago"
-    }
-  ]);
-
+  const userId = params.id;
+  
+  // Fetch real user data using our custom hooks
+  const { 
+    profileData, 
+    loading: profileLoading, 
+    error: profileError 
+  } = useUserProfile(userId);
+  
+  const { 
+    posts: userPosts, 
+    loading: postsLoading 
+  } = useUserPosts(userId);
+  
   const [activeTab, setActiveTab] = useState("posts");
-
-  // In a real application, you would fetch user data here
+  
+  // Check if we're viewing our own profile
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
+  
+  // Check if this is the current user's profile
   useEffect(() => {
-    // Fetch user data based on userId
-    // For now using dummy data
-  }, [userId]);
+    if (profileData) {
+      // You could compare with the current user's ID from auth
+      // For now, we'll assume it's not our profile
+      setIsOwnProfile(false);
+    }
+  }, [profileData]);
+  // Show loading state while data is being fetched
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+  
+  // Show error if any
+  if (profileError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="bg-red-50 p-4 rounded-md border border-red-200 max-w-md">
+          <h3 className="text-red-800 font-medium">Error loading profile</h3>
+          <p className="text-red-600 mt-2">{profileError}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Only render the main content when we have profile data
+  if (!profileData) {
+    return null;
+  }
 
   return (
     <>
-      <ProfileHeader profileData={userData} isOwnProfile={false} />
+      <ProfileHeader profileData={profileData} isOwnProfile={isOwnProfile} />
       <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
       
       {activeTab === "posts" && (
-        <FeedSection posts={userPosts} />
+        <FeedSection posts={userPosts} loading={postsLoading} />
       )}
       
       {activeTab === "about" && (
-        <AboutSection profileData={userData} />
+        <AboutSection profileData={profileData} />
       )}
       
       {activeTab === "friends" && (
@@ -99,6 +112,9 @@ function FriendsSection({ userId }) {
     { id: 3, name: "Sarah Williams", avatar: "/person.png", mutualFriends: 5 },
   ]);
 
+  // TODO: In future, fetch real friends data from API endpoint
+  // For example: useEffect(() => { fetchFriendsList(userId) }, [userId]);
+
   return (
     <div className="bg-white rounded-lg shadow p-6 mt-4">
       <div className="flex justify-between items-center mb-4">
@@ -108,7 +124,13 @@ function FriendsSection({ userId }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {friends.map(friend => (
           <div key={friend.id} className="flex items-center p-3 border rounded-lg hover:bg-gray-50">
-            <img src={friend.avatar} alt={friend.name} className="w-10 h-10 rounded-full mr-3" />
+            <Image 
+              src={friend.avatar} 
+              alt={friend.name} 
+              width={40}
+              height={40}
+              className="rounded-full mr-3" 
+            />
             <div>
               <h3 className="font-medium">{friend.name}</h3>
               <p className="text-sm text-gray-500">{friend.mutualFriends} mutual friends</p>
