@@ -79,11 +79,92 @@ export async function GET(request, { params }) {
         { status: 500 }
       );
     }
-    
-    // Network error or other issues
+      // Network error or other issues
     return NextResponse.json(
       { error: 'Failed to connect to the user service' }, 
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Proxy for updating user profile data
+ * @param {Request} request - The incoming request
+ * @param {Object} params - URL parameters
+ * @param {string} params.id - The user ID
+ * @returns {Promise<NextResponse>} The API response
+ */
+export async function PUT(request, { params }) {
+  try {
+    const { id } = params;
+    
+    // Get auth token from the request cookies
+    const token = request.cookies.get(TOKEN_NAME)?.value;
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' }, 
+        { status: 401 }
+      );
+    }
+
+    // Create HTTPS agent that ignores SSL certificate errors (for development)
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+
+    // Get the backend URL from environment variables
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_FQDN_BACKEND;
+    
+    if (!backendUrl) {
+      return NextResponse.json(
+        { error: 'Backend URL not configured' }, 
+        { status: 500 }
+      );
+    }
+
+    // Handle multipart/form-data
+    const formData = await request.formData();
+    
+    // Make request to the backend API
+    const endpoint = `${backendUrl}/api/User/${id}`;
+    const response = await axios.put(
+      endpoint, 
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Content-Type will be automatically set to 'multipart/form-data' by axios
+        },
+        httpsAgent
+      }
+    );
+    
+    // Forward the response
+    return NextResponse.json(response.data, { status: response.status });
+
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    
+    // Return appropriate error response
+    if (error.response) {
+      // The request was made and the server responded with a status code that falls out of the range of 2xx
+      return NextResponse.json(
+        { error: error.response.data?.message || 'Server error' }, 
+        { status: error.response.status || 500 }
+      );
+    } else if (error.request) {
+      // The request was made but no response was received
+      return NextResponse.json(
+        { error: 'No response from server. Please try again later.' }, 
+        { status: 503 }
+      );
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      return NextResponse.json(
+        { error: error.message || 'An unexpected error occurred' }, 
+        { status: 500 }
+      );
+    }
   }
 }

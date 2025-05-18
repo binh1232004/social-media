@@ -4,15 +4,22 @@ import Image from "next/image";
 import FeedSection from "../components/feed/feedSection";
 import ProfileHeader from "../components/profile/profileHeader";
 import ProfileTabs from "../components/profile/profileTabs";
+import Toast from "../components/ui/toast";
 import useUserProfile from "../hooks/useUserProfile";
 import useUserPosts from "../hooks/useUserPosts";
 
 export default function ProfilePage() {
   // Use the custom hooks to fetch real data
-  const { profileData, loading: profileLoading, error: profileError } = useUserProfile();
+  const { 
+    profileData, 
+    loading: profileLoading, 
+    error: profileError,
+    refreshProfile 
+  } = useUserProfile();
   const { posts: userPosts, loading: postsLoading } = useUserPosts(profileData?.userId);
   
   const [activeTab, setActiveTab] = useState("posts");
+  const [toast, setToast] = useState(null);
   // Show loading state while data is being fetched
   if (profileLoading) {
     return (
@@ -38,10 +45,22 @@ export default function ProfilePage() {
   if (!profileData) {
     return null;
   }
+  // Function to handle profile update success
+  const handleProfileUpdate = () => {
+    refreshProfile();
+    setToast({
+      message: 'Profile updated successfully!',
+      type: 'success'
+    });
+  };
   
   return (
     <>
-      <ProfileHeader profileData={profileData} isOwnProfile={true} />
+      <ProfileHeader 
+        profileData={profileData} 
+        isOwnProfile={true} 
+        onProfileUpdate={handleProfileUpdate} 
+      />
       <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
       
       {activeTab === "posts" && (
@@ -58,6 +77,15 @@ export default function ProfilePage() {
       
       {activeTab === "photos" && (
         <PhotosSection />
+      )}
+      
+      {/* Show toast notification if it exists */}
+      {toast && (
+        <Toast 
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </>
   );

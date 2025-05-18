@@ -13,7 +13,8 @@ const nextConfig = {
     domains: [
       'res.cloudinary.com', 
       'cloudinary.com',
-      'api.cloudinary.com'
+      'api.cloudinary.com',
+      'socialmediastoragebinh.blob.core.windows.net'
     ],
     remotePatterns: [
       {

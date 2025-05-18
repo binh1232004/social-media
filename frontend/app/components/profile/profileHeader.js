@@ -1,14 +1,23 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
+import EditProfileModal from "./editProfileModal";
 
-export default function ProfileHeader({ profileData, isOwnProfile = false }) {
+export default function ProfileHeader({ profileData, isOwnProfile = false, onProfileUpdate }) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFriend, setIsFriend] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   if (!profileData) {
     return null;
   }
+  
+  const handleEditSuccess = () => {
+    // Call the parent component's update function if provided
+    if (typeof onProfileUpdate === 'function') {
+      onProfileUpdate();
+    }
+  };
   
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -36,10 +45,10 @@ export default function ProfileHeader({ profileData, isOwnProfile = false }) {
                 <p className="text-gray-600 mt-2 max-w-md">{profileData.bio}</p>
               )}
             </div>
-            
-            <div className="flex space-x-2">
+              <div className="flex space-x-2">
               {isOwnProfile ? (
                 <button 
+                  onClick={() => setIsEditModalOpen(true)}
                   className="flex items-center bg-gray-100 hover:bg-gray-200 rounded-md px-3 py-1.5"
                 >
                   <span className="mr-1">✏️</span> Edit Profile
@@ -61,8 +70,15 @@ export default function ProfileHeader({ profileData, isOwnProfile = false }) {
               )}
             </div>
           </div>
-        </div>
-      </div>
+        </div>      </div>
+      
+      {/* Edit Profile Modal */}
+      <EditProfileModal 
+        profileData={profileData} 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }
