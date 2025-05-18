@@ -12,8 +12,31 @@ export default function UserSuggestionCard({ user, onFollowToggle }) {
   const [imageError, setImageError] = useState(false);
   const [hovered, setHovered] = useState(false);
 
+  // Handle follow/unfollow action
+  const handleFollowToggle = async () => {
+    if (!user || !user.id) return;
+    
+    setLoading(true);
+    try {
+      // Call the follow API
+      await axios.post(`/api/proxy/follow/${user.id}`);
+      
+      // Update local state
+      setIsFollowing(!isFollowing);
+      
+      // Notify parent component
+      if (onFollowToggle) {
+        onFollowToggle(user.id, !isFollowing);
+      }
+    } catch (error) {
+      console.error('Error toggling follow status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fallback image for users without a profile picture
-  const profileImage =  user.image ? user.image : '/avatar.png';
+  const profileImage = imageError || !user?.image ? '/avatar.png' : user.image;
 
   return (
     <div 
@@ -50,10 +73,9 @@ export default function UserSuggestionCard({ user, onFollowToggle }) {
           )}
           
         </div>
-        
-        <div className="flex justify-center">
+          <div className="flex justify-center">
           <button
-            // onClick={handleFollowToggle}
+            onClick={handleFollowToggle}
             disabled={loading}
             className={`px-6 py-2 rounded-full text-sm font-medium transition-colors duration-200 w-full max-w-[160px] ${
               isFollowing
