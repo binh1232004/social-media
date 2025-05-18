@@ -1,62 +1,51 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import FeedSection from "../components/feed/feedSection";
 import ProfileHeader from "../components/profile/profileHeader";
 import ProfileTabs from "../components/profile/profileTabs";
+import useUserProfile from "../hooks/useUserProfile";
+import useUserPosts from "../hooks/useUserPosts";
 
 export default function ProfilePage() {
-  const [profileData, setProfileData] = useState({
-    name: "John Doe",
-    username: "johndoe",
-    avatar: "/person.png",
-    coverPhoto: "https://source.unsplash.com/random/1200x300/?landscape",
-    bio: "Software Developer | Photography Enthusiast | Coffee Lover",
-    location: "San Francisco, CA",
-    followers: 1234,
-    following: 567,
-    joinedDate: "January 2020"
-  });
-
-  const [userPosts, setUserPosts] = useState([
-    {
-      id: 1,
-      user: profileData.name,
-      avatar: profileData.avatar,
-      content: "Just launched my new portfolio website! Check it out and let me know what you think.",
-      image: "https://source.unsplash.com/random/600x400/?website",
-      likes: 89,
-      comments: 12,
-      time: "3 days ago"
-    },
-    {
-      id: 2,
-      user: profileData.name,
-      avatar: profileData.avatar,
-      content: "Beautiful sunset at the beach today! 🌅",
-      image: "https://source.unsplash.com/random/600x400/?sunset,beach",
-      likes: 142,
-      comments: 24,
-      time: "1 week ago"
-    },
-    {
-      id: 3,
-      user: profileData.name,
-      avatar: profileData.avatar,
-      content: "Had an amazing time at the tech conference this weekend. Met so many inspiring people!",
-      likes: 67,
-      comments: 8,
-      time: "2 weeks ago"
-    }
-  ]);
-
+  // Use the custom hooks to fetch real data
+  const { profileData, loading: profileLoading, error: profileError } = useUserProfile();
+  const { posts: userPosts, loading: postsLoading } = useUserPosts(profileData?.userId);
+  
   const [activeTab, setActiveTab] = useState("posts");
+  // Show loading state while data is being fetched
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+  
+  // Show error if any
+  if (profileError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="bg-red-50 p-4 rounded-md border border-red-200 max-w-md">
+          <h3 className="text-red-800 font-medium">Error loading profile</h3>
+          <p className="text-red-600 mt-2">{profileError}</p>
+        </div>
+      </div>
+    );
+  }
 
+  // Only render the main content when we have profile data
+  if (!profileData) {
+    return null;
+  }
+  
   return (
-    <>      <ProfileHeader profileData={profileData} isOwnProfile={true} />
+    <>
+      <ProfileHeader profileData={profileData} isOwnProfile={true} />
       <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
       
       {activeTab === "posts" && (
-        <FeedSection posts={userPosts} />
+        <FeedSection posts={userPosts} loading={postsLoading} />
       )}
       
       {activeTab === "about" && (
@@ -97,6 +86,8 @@ function AboutSection({ profileData }) {
 }
 
 function FriendsSection() {
+  // We're keeping the mock friends data for now as mentioned in the conversation
+  // This can be replaced later with real data from a friends API
   const friends = [
     { id: 1, name: "Jane Smith", avatar: "/person.png", mutualFriends: 12 },
     { id: 2, name: "Mike Johnson", avatar: "/person.png", mutualFriends: 8 },
@@ -115,7 +106,13 @@ function FriendsSection() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {friends.map(friend => (
           <div key={friend.id} className="flex items-center p-3 border rounded-lg hover:bg-gray-50">
-            <img src={friend.avatar} alt={friend.name} className="w-10 h-10 rounded-full mr-3" />
+            <Image 
+              src={friend.avatar} 
+              alt={friend.name} 
+              width={40} 
+              height={40} 
+              className="rounded-full mr-3" 
+            />
             <div>
               <h3 className="font-medium">{friend.name}</h3>
               <p className="text-sm text-gray-500">{friend.mutualFriends} mutual friends</p>
@@ -128,6 +125,7 @@ function FriendsSection() {
 }
 
 function PhotosSection() {
+  // These are mock photos for now, to be replaced with real data
   const photos = [
     "https://source.unsplash.com/random/300x300/?nature",
     "https://source.unsplash.com/random/300x300/?city",
@@ -145,8 +143,14 @@ function PhotosSection() {
       <h2 className="text-xl font-semibold mb-4">Photos</h2>
       <div className="grid grid-cols-3 gap-2">
         {photos.map((photo, index) => (
-          <div key={index} className="aspect-square overflow-hidden rounded-lg">
-            <img src={photo} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
+          <div key={index} className="aspect-square overflow-hidden rounded-lg relative">
+            <Image 
+              src={photo} 
+              alt={`Photo ${index + 1}`} 
+              fill
+              sizes="(max-width: 768px) 33vw, 20vw"
+              className="object-cover" 
+            />
           </div>
         ))}
       </div>
