@@ -55,8 +55,7 @@ export default function ProfilePage() {
   };
   
   return (
-    <>
-      <ProfileHeader 
+    <>    <ProfileHeader 
         profileData={profileData} 
         isOwnProfile={true} 
         onProfileUpdate={handleProfileUpdate} 

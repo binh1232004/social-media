@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import axios from 'axios';
 import { getAuthToken } from '../../utils/auth';
+import { publish } from '../../utils/events';
 
 export default function EditProfileModal({ profileData, isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -114,6 +115,9 @@ export default function EditProfileModal({ profileData, isOpen, onClose, onSucce
           }
         }
       );      if (response.status === 200 || response.status === 204) {
+        // Notify all components that the avatar might have changed
+        publish('avatar-updated', response.data?.image || null);
+        
         // Call success callback with the updated profile data (if available)
         if (response.data) {
           onSuccess?.(response.data);

@@ -2,13 +2,17 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { getUserInfo, logout } from '../utils/auth';
+import useUserAvatar from '../hooks/useUserAvatar';
 
 export default function UserAvatar() {
   const [userInfo, setUserInfo] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
   
+  // Use the custom hook to fetch the avatar directly from API
+  const { avatarUrl, loading } = useUserAvatar();
+  
   useEffect(() => {
-    // Get user info from the JWT token
+    // Get other user info from the JWT token
     const info = getUserInfo();
     setUserInfo(info);
   }, []);
@@ -17,26 +21,27 @@ export default function UserAvatar() {
     logout('/signin');
   };
   
-  // Default avatar if no profile image in token
-  const avatarSrc = userInfo?.profileImage || '/avatar.png';
-  
   return (
     <div className="relative">
       <button 
         className="mr-2 w-10 h-10 rounded-full flex justify-center items-center hover:bg-blue-900 hover:ring-sky-500 bg-neutral-500"
         onClick={() => setShowDropdown(!showDropdown)}
-      >
-        <Image 
-          src={avatarSrc} 
-          width={30} 
-          height={30} 
-          alt="User Avatar" 
-          className="rounded-full"
-          onError={(e) => {
-            // Fallback to default avatar if image fails to load
-            e.target.src = '/avatar.png';
-          }}
-        />
+      >        {loading ? (
+          // Show a loading placeholder while fetching the avatar
+          <div className="w-7 h-7 rounded-full bg-gray-300 animate-pulse"></div>
+        ) : (
+          <Image 
+            src={avatarUrl} 
+            width={30} 
+            height={30} 
+            alt="User Avatar" 
+            className="rounded-full"
+            onError={(e) => {
+              // Fallback to default avatar if image fails to load
+              e.target.src = '/avatar.png';
+            }}
+          />
+        )}
       </button>
       
       {showDropdown && (
