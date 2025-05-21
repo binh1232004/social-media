@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react-hooks';
-import { useComments } from '../app/hooks/useComments';
+import { useComments } from '../app/hooks/useComment';
 
 // Mock the showToast function
 jest.mock('../app/utils/toast', () => ({

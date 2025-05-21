@@ -10,7 +10,7 @@ import { showToast } from '../utils/toast';
  * @param {Array} options.initialComments - Initial comments array
  * @returns {Object} Comment state and functions
  */
-export function useComments({ postId, initialComments = [] }) {
+export function useComment({ postId, initialComments = [] }) {
   // Comment states
   const [comments, setComments] = useState(initialComments || []);
   const [comment, setComment] = useState("");
@@ -380,4 +380,4 @@ export function useComments({ postId, initialComments = [] }) {
   };
 }
 
-export default useComments;
+export default useComment;

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { showToast } from "../../utils/toast";
-import useComments from "../../hooks/useComments";
+import useComment from "../../hooks/useComment";
 
 export default function PostCard({ post, onLike }) {
     const [showComments, setShowComments] = useState(false);
@@ -26,7 +26,7 @@ export default function PostCard({ post, onLike }) {
         cancelReply,
         toggleComments,
         formatRelativeTime
-    } = useComments({ 
+    } = useComment({ 
         postId: post.id,
         initialComments: post.comments || []
     });
