@@ -12,7 +12,8 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
     const [error, setError] = useState(null);
     const fileInputRef = useRef(null);
     const mediaFileRef = useRef(null);
-      const handleSubmit = async (e) => {
+    
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
         if (!content.trim()) {
@@ -42,7 +43,7 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
                     });
                     
                 } catch (uploadError) {
-                    throw new Error(`Failed to upload media: ${uploadError.message}`);
+                    throw new Error(`Không thể tải lên file: ${uploadError.message}`);
                 }
             }
             
@@ -57,7 +58,7 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
             
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || `Error: ${response.status}`);
+                throw new Error(errorData.error || `Lỗi: ${response.status}`);
             }
             
             const data = await response.json();
@@ -81,13 +82,14 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
                 fileInputRef.current.value = "";
             }
         } catch (err) {
-            console.error("Error creating post:", err);
-            setError(err.message || "Failed to create post");
+            console.error("Lỗi khi tạo bài đăng:", err);
+            setError(err.message || "Không thể tạo bài đăng");
         } finally {
             setSubmitting(false);
         }
     };
-      const handleFileChange = (e) => {
+    
+    const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             // Validate file type
@@ -98,7 +100,7 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
                 file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
                 
             if (!isValidType) {
-                setError('Only images, PDFs, and Word documents are supported.');
+                setError('Chỉ chấp nhận hình ảnh, PDF và tài liệu Word.');
                 return;
             }
             
@@ -120,7 +122,8 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
     const triggerFileInput = () => {
         fileInputRef.current.click();
     };
-      const getFileIcon = (fileName) => {
+    
+    const getFileIcon = (fileName) => {
         if (!fileName) return null;
         
         const extension = fileName.split('.').pop().toLowerCase();
@@ -142,7 +145,7 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
                 <form onSubmit={handleSubmit} className="flex-1">
                     <input
                         type="text"
-                        placeholder="What's on your mind?"
+                        placeholder="Bạn đang nghĩ gì?"
                         className="w-full rounded-full bg-gray-100 px-4 py-2"
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
@@ -160,7 +163,8 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
             {showMediaInput && (
                 <div className="mb-3">
                     <div className="flex flex-col gap-2">
-                        {/* Hidden actual file input */}                        <input
+                        {/* Hidden actual file input */}
+                        <input
                             ref={fileInputRef}
                             type="file"
                             accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -178,14 +182,14 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
-                            Choose File
+                            Chọn File
                         </button>
                         
                         {/* Display selected file name with icon */}
                         {selectedFileName && (
                             <div className="flex items-center mt-2">
                                 <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full mr-2">
-                                    Selected:
+                                    Đã chọn:
                                 </span>
                                 <span className="text-sm text-gray-600 flex items-center gap-1">
                                     <span>{getFileIcon(selectedFileName)}</span>
@@ -211,7 +215,7 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
                             <div className="mt-2 relative h-40">
                                 <Image 
                                     src={mediaPreviewUrl} 
-                                    alt="Preview" 
+                                    alt="Xem trước" 
                                     fill
                                     className="rounded-md object-contain"
                                     unoptimized={mediaPreviewUrl.startsWith('blob:')}
@@ -229,7 +233,7 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
                     disabled={submitting}
                     className="flex-1 flex items-center justify-center py-1 hover:bg-gray-100 rounded-lg disabled:opacity-50"
                 >
-                    <span className="mr-2">📎</span> Attach Media
+                    <span className="mr-2">📎</span> Đính kèm file
                 </button>
                 <button 
                     type="button"
@@ -240,10 +244,10 @@ export default function CreatePost({ onPostCreated, refreshPosts }) {
                     {submitting ? (
                         <div className="flex items-center">
                             <div className="w-4 h-4 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
-                            Posting...
+                            Đang đăng...
                         </div>
                     ) : (
-                        "Post"
+                        "Đăng"
                     )}
                 </button>
             </div>

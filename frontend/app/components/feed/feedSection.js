@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import PostCard from "./postCardWithMedia"; // Use the enhanced PostCard with media support
-import CreatePost from "./createPost";
+import PostCard from "./postCardWithMedia"; // Use the Vietnamese version of PostCard
+import CreatePost from "./createPost"; // Use the Vietnamese version of CreatePost
 
 export default function FeedSection({ posts = [], loading = false, refreshPosts }) {
     const [feedPosts, setFeedPosts] = useState(posts);
@@ -17,7 +17,7 @@ export default function FeedSection({ posts = [], loading = false, refreshPosts 
         // Format the API response to match our feed post structure
         const newPost = {
             id: postData.id || `temp-${Date.now()}`,
-            user: postData.user?.name || "You",
+            user: postData.user?.name || "Bạn",  // "You" translated to Vietnamese
             userId: postData.user?.id || postData.userId,
             avatar: postData.user?.profileImage || "/person.png",
             content: postData.content,
@@ -25,13 +25,14 @@ export default function FeedSection({ posts = [], loading = false, refreshPosts 
             media: postData.media || [],
             likes: 0,
             comments: 0,
-            time: "Just now",
+            time: "Vừa xong",  // "Just now" translated to Vietnamese
             createdAt: postData.createdAt || new Date().toISOString()
         };
         
         setFeedPosts([newPost, ...feedPosts]);
     };
-      const handleLike = (postId) => {
+
+    const handleLike = (postId) => {
         setFeedPosts(feedPosts.map(post => {
             if (post.id === postId) {
                 // Toggle isLiked status and update likes count
@@ -62,7 +63,7 @@ export default function FeedSection({ posts = [], loading = false, refreshPosts 
                 ))
             ) : (
                 <div className="bg-white rounded-lg shadow p-6 text-center">
-                    <p className="text-gray-500">No posts to display</p>
+                    <p className="text-gray-500">Không có bài đăng để hiển thị</p> {/* "No posts to display" translated to Vietnamese */}
                 </div>
             )}
         </div>

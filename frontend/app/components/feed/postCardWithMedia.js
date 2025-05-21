@@ -51,7 +51,7 @@ export default function PostCard({ post, onLike }) {
         
         // Handle both text and content fields (API returns content, our local state uses text)
         const commentText = comment.content || comment.text;
-        const commentUser = comment.user || "Unknown User";
+        const commentUser = comment.user || "Người dùng không xác định";
         const commentTime = comment.time || formatRelativeTime(comment.postedAt);
         
         return (
@@ -66,7 +66,7 @@ export default function PostCard({ post, onLike }) {
                             <p>{commentText}</p>
                             <p className="text-xs text-gray-500 mt-1">
                                 {commentTime}
-                                {comment.isOptimistic && <span className="text-blue-500 ml-2">Sending...</span>}
+                                {comment.isOptimistic && <span className="text-blue-500 ml-2">Đang gửi...</span>}
                             </p>
                         </div>
                         
@@ -75,7 +75,7 @@ export default function PostCard({ post, onLike }) {
                                 onClick={() => handleReply(comment.id, commentUser)}
                                 className="text-xs text-gray-500 mt-1 ml-2 hover:text-blue-500"
                             >
-                                Reply
+                                Trả lời
                             </button>
                         )}
                     </div>
@@ -187,7 +187,7 @@ export default function PostCard({ post, onLike }) {
                                         <div className="relative w-full h-auto rounded-lg overflow-hidden max-h-96 cursor-pointer mb-3">
                                             <Image 
                                                 src={media.mediaUrl} 
-                                                alt="Post image"
+                                                alt="Hình ảnh bài viết"
                                                 width={600}
                                                 height={400}
                                                 className="w-full h-auto rounded-lg object-cover max-h-96 hover:opacity-95"
@@ -204,17 +204,17 @@ export default function PostCard({ post, onLike }) {
                                 
                                 // Determine the document type based on extension
                                 let icon = '📄';
-                                let documentType = 'Document';
+                                let documentType = 'Tài liệu';
                                 
                                 if (fileName) {
                                     const extension = fileName.split('.').pop().toLowerCase();
                                     
                                     if (extension === 'pdf') {
                                         icon = '📄';
-                                        documentType = 'PDF Document';
+                                        documentType = 'Tài liệu PDF';
                                     } else if (extension === 'doc' || extension === 'docx') {
                                         icon = '📝';
-                                        documentType = 'Word Document';
+                                        documentType = 'Tài liệu Word';
                                     }
                                 }
                                 
@@ -228,8 +228,8 @@ export default function PostCard({ post, onLike }) {
                                     >
                                         <span className="text-3xl mr-4">{icon}</span>
                                         <div className="flex-1 overflow-hidden">
-                                            <p className="font-medium text-blue-600 truncate">{fileName || 'Document'}</p>
-                                            <p className="text-xs text-gray-500">{documentType} - Click to open</p>
+                                            <p className="font-medium text-blue-600 truncate">{fileName || 'Tài liệu'}</p>
+                                            <p className="text-xs text-gray-500">{documentType} - Nhấn để mở</p>
                                         </div>
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -243,7 +243,7 @@ export default function PostCard({ post, onLike }) {
                                     <div key={index} className="flex items-center p-3 bg-gray-50 rounded mb-3 border border-gray-200">
                                         <span className="text-2xl mr-3">📎</span>
                                         <span className="text-sm text-gray-600">
-                                            Attachment ({media.mediaType || 'unknown'})
+                                            Tệp đính kèm ({media.mediaType || 'không xác định'})
                                             {media.mediaUrl && 
                                                 <a 
                                                     href={media.mediaUrl} 
@@ -251,7 +251,7 @@ export default function PostCard({ post, onLike }) {
                                                     rel="noopener noreferrer"
                                                     className="ml-2 text-blue-500 hover:underline"
                                                 >
-                                                    Open
+                                                    Mở
                                                 </a>
                                             }
                                         </span>
@@ -268,7 +268,7 @@ export default function PostCard({ post, onLike }) {
                         <div className="relative w-full h-auto rounded-lg overflow-hidden max-h-96 cursor-pointer">
                             <Image 
                                 src={post.image} 
-                                alt="Post content" 
+                                alt="Nội dung bài viết" 
                                 width={600}
                                 height={400}
                                 className="w-full h-auto rounded-lg object-cover max-h-96 hover:opacity-95"
@@ -283,11 +283,11 @@ export default function PostCard({ post, onLike }) {
             <div className="flex justify-between text-sm text-gray-500 mb-3">
                 <div>
                     <span className={`inline-block mr-1 ${isVoted ? 'text-blue-500' : ''}`}>⬆️</span>
-                    {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
+                    {voteCount} {voteCount === 1 ? 'lượt thích' : 'lượt thích'}
                 </div>
                 <div>
                     <span className="inline-block mr-1">💬</span>
-                    {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+                    {comments.length} {comments.length === 1 ? 'bình luận' : 'bình luận'}
                 </div>
             </div>
             
@@ -296,22 +296,22 @@ export default function PostCard({ post, onLike }) {
                 <button 
                     onClick={toggleVote}
                     className={`flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg ${isVoted ? 'text-blue-500 font-medium' : ''}`}
-                    aria-label={isVoted ? 'Remove vote' : 'Vote for this post'}
+                    aria-label={isVoted ? 'Bỏ thích' : 'Thích bài viết này'}
                 >
                     <span className="mr-2" role="img" aria-label="vote">
                         {isVoted ? '⬆️' : '👍'}
                     </span> 
-                    {isVoted ? 'Voted' : 'Vote'}
+                    {isVoted ? 'Đã thích' : 'Thích'}
                 </button>
                 <button 
                     onClick={handleToggleComments} 
                     className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg"
                 >
-                    <span className="mr-2">💬</span> Comment
+                    <span className="mr-2">💬</span> Bình luận
                     {isLoadingComments && <span className="ml-1 animate-pulse">...</span>}
                 </button>
                 <button className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg">
-                    <span className="mr-2">↗️</span> Share
+                    <span className="mr-2">↗️</span> Chia sẻ
                 </button>
             </div>
             
@@ -329,7 +329,7 @@ export default function PostCard({ post, onLike }) {
                             ))
                         ) : (
                             <div className="text-center py-3 text-gray-500 text-sm">
-                                Be the first to comment on this post
+                                Hãy là người đầu tiên bình luận về bài viết này
                             </div>
                         )}
                     </div>
@@ -338,7 +338,7 @@ export default function PostCard({ post, onLike }) {
                         {replyTo && (
                             <div className="bg-blue-50 px-3 py-1 mb-2 rounded flex justify-between items-center">
                                 <span className="text-sm">
-                                    Replying to <span className="font-medium">{replyTo.userName}</span>
+                                    Đang trả lời <span className="font-medium">{replyTo.userName}</span>
                                 </span>
                                 <button 
                                     type="button"
@@ -353,7 +353,7 @@ export default function PostCard({ post, onLike }) {
                         <div className="flex">
                             <input
                                 type="text"
-                                placeholder={replyTo ? `Reply to ${replyTo.userName}...` : "Write a comment..."}
+                                placeholder={replyTo ? `Trả lời ${replyTo.userName}...` : "Viết bình luận..."}
                                 className="flex-1 rounded-full bg-gray-100 px-4 py-2 mr-2"
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
@@ -365,7 +365,7 @@ export default function PostCard({ post, onLike }) {
                                 className="bg-blue-500 text-white rounded-full px-4 py-2 hover:bg-blue-600 disabled:bg-blue-300"
                                 disabled={!comment.trim()}
                             >
-                                {replyTo ? "Reply" : "Post"}
+                                {replyTo ? "Trả lời" : "Đăng"}
                             </button>
                         </div>
                     </form>
