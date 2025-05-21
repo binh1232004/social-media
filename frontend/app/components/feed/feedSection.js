@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import PostCard from "./postCard";
+import PostCard from "./postCardWithMedia"; // Use the enhanced PostCard with media support
 import CreatePost from "./createPost";
 
-export default function FeedSection({ posts = [], loading = false }) {
+export default function FeedSection({ posts = [], loading = false, refreshPosts }) {
     const [feedPosts, setFeedPosts] = useState(posts);
     
     // Update feedPosts when posts prop changes
@@ -13,16 +13,20 @@ export default function FeedSection({ posts = [], loading = false }) {
         }
     }, [posts]);
     
-    const addNewPost = (post) => {
+    const addNewPost = (postData) => {
+        // Format the API response to match our feed post structure
         const newPost = {
-            id: feedPosts.length + 1,
-            user: "You",
-            avatar: "/person.png",
-            content: post.content,
-            image: post.image,
+            id: postData.id || `temp-${Date.now()}`,
+            user: postData.user?.name || "You",
+            userId: postData.user?.id || postData.userId,
+            avatar: postData.user?.profileImage || "/person.png",
+            content: postData.content,
+            // Handle media from API response
+            media: postData.media || [],
             likes: 0,
             comments: 0,
-            time: "Just now"
+            time: "Just now",
+            createdAt: postData.createdAt || new Date().toISOString()
         };
         
         setFeedPosts([newPost, ...feedPosts]);
@@ -36,7 +40,7 @@ export default function FeedSection({ posts = [], loading = false }) {
     
     return (
         <div className="space-y-6 mt-3">
-            <CreatePost onPostCreated={addNewPost} /> 
+            <CreatePost onPostCreated={addNewPost} refreshPosts={refreshPosts} /> 
             
             {loading ? (
                 <div className="flex justify-center py-8">
@@ -44,11 +48,12 @@ export default function FeedSection({ posts = [], loading = false }) {
                 </div>
             ) : feedPosts && feedPosts.length > 0 ? (
                 feedPosts.map(post => (
-                    <PostCard 
-                        key={post.id} 
-                        post={post}
-                        onLike={handleLike}
-                    />
+                    <div key={post.id} ref={post.ref || null}>
+                        <PostCard 
+                            post={post}
+                            onLike={handleLike}
+                        />
+                    </div>
                 ))
             ) : (
                 <div className="bg-white rounded-lg shadow p-6 text-center">

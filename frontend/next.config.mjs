@@ -14,7 +14,8 @@ const nextConfig = {
       'res.cloudinary.com', 
       'cloudinary.com',
       'api.cloudinary.com',
-      'socialmediastoragebinh.blob.core.windows.net'
+      'socialmediastoragebinh.blob.core.windows.net',
+      'source.unsplash.com'
     ],
     remotePatterns: [
       {

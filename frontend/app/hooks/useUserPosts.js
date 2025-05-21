@@ -1,168 +1,174 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { getAuthToken, isAuthenticated } from '../utils/auth';
-
+import { useState, useEffect, useCallback } from 'react';
+import { isAuthenticated } from '../utils/auth';
 /**
- * Custom hook for fetching posts by user
+ * Custom hook for fetching posts by user with infinite scrolling
  * @param {string} userId - The user ID to fetch posts for
- * @param {number} limit - Maximum number of posts to fetch
- * @returns {Object} - Posts data and loading state
+ * @param {number} pageSize - Number of posts to fetch per page
+ * @returns {Object} - Posts data, loading state, and functions to load more posts
  */
-export default function useUserPosts(userId, limit = 10) {
+export default function useUserPosts(userId, pageSize = 10) {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Fetch user posts from API
-  useEffect(() => {
-    async function fetchPosts() {
-      if (!userId) return;
-      
-      // Skip if not in browser environment
-      if (typeof window === 'undefined') {
-        return;
-      }
-      
-      // Check if user is authenticated
-      if (!isAuthenticated()) {
-        setError('You must be logged in to view posts');
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const token = getAuthToken();
-        
-        // This is where you'd call an API to get user posts
-        // For now, we'll use mock data since you might not have the posts endpoint yet
-        
-        // Simulating an API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Mock posts data - replace this with actual API call when available
-        const mockPosts = [
-          {
-            id: 1,
-            userId: userId,
-            content: "Just launched my new portfolio website! Check it out and let me know what you think.",
-            image: "https://source.unsplash.com/random/600x400/?website",
-            likes: 89,
-            comments: 12,
-            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days ago
-          },
-          {
-            id: 2,
-            userId: userId,
-            content: "Beautiful sunset at the beach today! 🌅",
-            image: "https://source.unsplash.com/random/600x400/?sunset,beach",
-            likes: 142,
-            comments: 24,
-            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() // 1 week ago
-          },
-          {
-            id: 3,
-            userId: userId,
-            content: "Had an amazing time at the tech conference this weekend. Met so many inspiring people!",
-            image: null,
-            likes: 67,
-            comments: 8,
-            createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString() // 2 weeks ago
-          }
-        ];
-        
-        // When you have a posts API endpoint, replace the mock data with this:
-        /*
-        const response = await axios.get(`/api/proxy/user/${userId}/posts`, {
-          params: { limit },
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.status === 200 && Array.isArray(response.data)) {
-          setPosts(response.data);
-        } else {
-          console.error('Invalid posts data format:', response.data);
-          setError('Failed to fetch posts: Invalid data format');
-        }
-        */
-        
-        setPosts(mockPosts);
-      } catch (err) {
-        console.error('Error fetching user posts:', err);
-        
-        // Provide more detailed error message
-        if (err.response) {
-          setError(err.response.data?.error || `Server error: ${err.response.status}`);
-        } else if (err.request) {
-          setError('No response from server. Please check your connection.');
-        } else {
-          setError(`Request error: ${err.message}`);
-        }
-      } finally {
-        setLoading(false);
-      }
+  // Function to fetch posts from API
+  const fetchPosts = useCallback(async (pageNum = 1, shouldAppend = false) => {
+    if (!userId) return;
+    
+    // Skip if not in browser environment
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
+    // Check if user is authenticated
+    if (!isAuthenticated()) {
+      setError('You must be logged in to view posts');
+      setInitialLoading(false);
+      setLoading(false);
+      return;
     }
 
-    fetchPosts();
-  }, [userId, limit, refreshTrigger]);
+    // Set appropriate loading state
+    if (pageNum === 1) {
+      setInitialLoading(true);
+    } else {
+      setLoading(true);
+    }
+    
+    setError(null);
+    
+    try {
+      // Set up the base URL for the API request
+      let url = `/api/proxy/user-posts`;
+      
+      // Create query params
+      const params = new URLSearchParams();
+      params.append('userId', userId);
+      params.append('page', pageNum);
+      params.append('pageSize', pageSize);
+      
+      
+      const response = await fetch(`${url}?${params.toString()}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Error ${response.status}: Failed to fetch posts`);
+      }
+      
+      const postsData = await response.json();
+      // Check if we've reached the end of the data
+      if (!Array.isArray(postsData) || postsData.length === 0 || postsData.length < pageSize) {
+        setHasMore(false);
+      }
+      
+      // Transform the API data format to match our frontend format
+      const transformedPosts = Array.isArray(postsData) ? postsData.map(post => {
+        // Process and normalize media items if they exist
+        const normalizedMedia = post.media?.map(mediaItem => {
+          // Ensure mediaType is always correct
+          let mediaType = 'unknown';
+          
+          if (!mediaItem.mediaType) {
+            // Try to detect type from URL if mediaType is missing
+            const url = mediaItem.mediaUrl || '';
+            if (url.match(/\.(jpeg|jpg|gif|png)$/i)) {
+              mediaType = 'image';
+            } else if (url.match(/\.(pdf)$/i)) {
+              mediaType = 'document';
+            } else if (url.match(/\.(doc|docx)$/i)) {
+              mediaType = 'document';
+            }
+          } else {
+            // Use the provided mediaType but ensure it's normalized
+            if (mediaItem.mediaType.includes('image')) {
+              mediaType = 'image';
+            } else if (
+              mediaItem.mediaType.includes('pdf') || 
+              mediaItem.mediaType.includes('doc') ||
+              mediaItem.mediaType.includes('application')
+            ) {
+              mediaType = 'document';
+            }
+          }
+          
+          return {
+            ...mediaItem,
+            mediaType
+          };
+        }) || [];
+        
+        return {
+          id: post.postId || post.id,
+          userId: post.userId,
+          content: post.content,
+          // Keep the normalized media array for the UI components
+          media: normalizedMedia,
+          // For backward compatibility - get image from media if available
+          image: post.media && post.media.length > 0 && 
+                (post.media[0].mediaType?.includes('image') || !post.media[0].mediaType)
+            ? post.media[0].mediaUrl 
+            : null,
+          likes: post.voteCount || 0,
+          comments: post.commentCount || 0,
+          createdAt: post.postedAt || post.createdAt || new Date().toISOString(),
+          // Include additional details
+          user: post.userName || post.user?.name || "User", 
+          avatar: post.userProfileImage || post.user?.profileImage || "/person.png",
+          commentList: post.comments || [],
+          isLiked: post.isVotedByCurrentUser || false,
+          tags: post.tags || [],
+          location: post.location || null
+        };
+      }) : [];
+      
+      // Update the posts state based on whether we're appending or replacing
+      setPosts(prevPosts => 
+        shouldAppend ? [...prevPosts, ...transformedPosts] : transformedPosts
+      );
+      
+    } catch (err) {
+      console.error('Error fetching user posts:', err);
+      setError(err.message || 'Failed to fetch posts');
+      setHasMore(false);
+    } finally {
+      setInitialLoading(false);
+      setLoading(false);
+    }
+  }, [userId, pageSize]);
+
+  // Initial load - fetch first page when component mounts or when userId/pageSize/refreshTrigger changes
+  useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+    fetchPosts(1, false);
+  }, [userId, pageSize, refreshTrigger, fetchPosts]);
+
+  // Function to load more posts (for infinite scrolling)
+  const loadMorePosts = useCallback(() => {
+    if (!loading && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchPosts(nextPage, true);
+    }
+  }, [loading, hasMore, page, fetchPosts]);
 
   // Function to refresh posts
-  const refreshPosts = () => {
+  const refreshPosts = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
-  };
-
-  // Format posts for display
-  const formattedPosts = posts.map(post => {
-    // Calculate relative time
-    const postDate = new Date(post.createdAt);
-    const now = new Date();
-    const diffTime = Math.abs(now - postDate);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    let timeAgo;
-    if (diffDays === 0) {
-      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-      if (diffHours === 0) {
-        const diffMinutes = Math.floor(diffTime / (1000 * 60));
-        timeAgo = `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`;
-      } else {
-        timeAgo = `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
-      }
-    } else if (diffDays === 1) {
-      timeAgo = 'Yesterday';
-    } else if (diffDays < 7) {
-      timeAgo = `${diffDays} days ago`;
-    } else if (diffDays < 30) {
-      const diffWeeks = Math.floor(diffDays / 7);
-      timeAgo = `${diffWeeks} ${diffWeeks === 1 ? 'week' : 'weeks'} ago`;
-    } else {
-      timeAgo = postDate.toLocaleDateString();
-    }
-    
-    return {
-      id: post.id,
-      user: post.authorName || 'User',
-      avatar: post.authorImage || '/avatar.png',
-      content: post.content,
-      image: post.image,
-      likes: post.likes || 0,
-      comments: post.comments || 0,
-      time: timeAgo
-    };
-  });
+  }, []);
 
   return {
-    posts: formattedPosts,
+    posts,
     loading,
+    initialLoading,
     error,
+    hasMore,
+    loadMorePosts,
     refreshPosts
   };
 }

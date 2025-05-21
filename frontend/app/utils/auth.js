@@ -101,7 +101,6 @@ export function removeAuthToken() {
   document.cookie = `${TOKEN_NAME}_exists=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax;`;
   document.cookie = `${TOKEN_NAME}_exists=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=None; Secure;`;
   
-  console.log('Authentication token removed from cookies');
   
   // Return true to indicate successful removal
   return true;
@@ -137,10 +136,6 @@ export function getUserInfo() {
   const decodedToken = decodeJwt(token);
   if (!decodedToken) return null;
   
-  // In production, don't log sensitive token information
-  if (process.env.NODE_ENV !== 'production') {
-    console.log("Decoded token:", decodedToken);
-  }
   
   return {
     userId: decodedToken.user_id,

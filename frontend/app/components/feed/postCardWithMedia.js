@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -13,31 +13,7 @@ export default function PostCard({ post, onLike }) {
             user: "Alex Kim", 
             text: "Great post!", 
             time: "1h ago",
-            replies: [
-                { 
-                    id: 3,
-                    user: "Jane Smith", 
-                    text: "I agree with you!", 
-                    time: "45m ago",
-                    replies: [
-                        {
-                            id: 5,
-                            user: "Mike Johnson",
-                            text: "I think so too! The details are amazing.",
-                            time: "30m ago",
-                            replies: [
-                                {
-                                    id: 7,
-                                    user: "Alex Kim",
-                                    text: "Thanks everyone for your support!",
-                                    time: "20m ago",
-                                    replies: []
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+            replies: []
         },
         { 
             id: 2,
@@ -47,6 +23,7 @@ export default function PostCard({ post, onLike }) {
             replies: [] 
         }
     ]);
+    
     
     // Function to add a comment or reply at any nesting level
     const addNestedComment = (commentId, commentText, commentsArray) => {
@@ -108,6 +85,23 @@ export default function PostCard({ post, onLike }) {
         setComment("");
     };
     
+    // Helper function to get file icon based on extension
+    const getFileIcon = (fileName) => {
+        if (!fileName) return '📎';
+        
+        const extension = fileName.split('.').pop().toLowerCase();
+        
+        switch (extension) {
+            case 'pdf':
+                return '📄';
+            case 'doc':
+            case 'docx':
+                return '📝';
+            default:
+                return '📎';
+        }
+    };
+    
     // Recursive comment component for rendering comments at any nesting level
     const Comment = ({ comment, nestLevel = 0 }) => {
         const maxNestLevel = 5; // Maximum nesting level to prevent too deep nesting
@@ -151,13 +145,20 @@ export default function PostCard({ post, onLike }) {
     
     return (
         <div className="bg-white rounded-lg shadow p-5">
+                      
             {/* Post header */}
             <div className="flex items-center mb-4">
-                <img 
-                    src={post.avatar} 
-                    alt={post.user}
-                    className="w-10 h-10 rounded-full mr-3" 
-                />                <div>
+                <div className="w-10 h-10 rounded-full bg-gray-200 mr-3 overflow-hidden relative">
+                    <Image 
+                        src={post.avatar || "/person.png"}
+                        alt={post.user}
+                        width={40}
+                        height={40}
+                        className="object-cover"
+                        unoptimized={post.avatar && post.avatar.startsWith("blob:")}
+                    />
+                </div>
+                <div>
                     <Link href={`/user/${post.userId}`}>
                         <h3 className="font-semibold hover:underline">{post.user}</h3>
                     </Link>
@@ -172,7 +173,9 @@ export default function PostCard({ post, onLike }) {
                 </div>
             </div>
             
-            {/* Post content */}            <div className="mb-4">                <Link href={`/post/${post.id}`}>
+            {/* Post content */}
+            <div className="mb-4">
+                <Link href={`/post/${post.id}`}>
                     <p className="mb-3 hover:text-blue-700 cursor-pointer">{post.content}</p>
                 </Link>
                 
@@ -188,8 +191,102 @@ export default function PostCard({ post, onLike }) {
                             </span>
                         ))}
                     </div>
-                )}                {/* Handle legacy post.image for backward compatibility */}
-                {post.image && (
+                )}
+                  
+                {/* Handle media array format with improved debugging */}
+                {post.media && post.media.length > 0 && (
+                    <div className="post-media-container">
+                        {post.media.map((media, index) => {
+                            // Debug output for problematic media items
+                            if (!media.mediaUrl) {
+                                console.warn('Media item missing URL:', media);
+                                return null;
+                            }
+
+                            // Handle image media type
+                            if (media.mediaType === 'image') {
+                                return (
+                                    <Link href={`/post/${post.id}`} key={index}>
+                                        <div className="relative w-full h-auto rounded-lg overflow-hidden max-h-96 cursor-pointer mb-3">
+                                            <Image 
+                                                src={media.mediaUrl} 
+                                                alt="Post image"
+                                                width={600}
+                                                height={400}
+                                                className="w-full h-auto rounded-lg object-cover max-h-96 hover:opacity-95"
+                                                unoptimized={media.mediaUrl.startsWith("blob:") || media.mediaUrl.startsWith("data:")}
+                                            />
+                                        </div>
+                                    </Link>
+                                );
+                            } 
+                            // Handle document media type
+                            else if (media.mediaType === 'document') {
+                                // Extract filename from URL for display
+                                const fileName = media.mediaUrl.split('/').pop();
+                                
+                                // Determine the document type based on extension
+                                let icon = '📄';
+                                let documentType = 'Document';
+                                
+                                if (fileName) {
+                                    const extension = fileName.split('.').pop().toLowerCase();
+                                    
+                                    if (extension === 'pdf') {
+                                        icon = '📄';
+                                        documentType = 'PDF Document';
+                                    } else if (extension === 'doc' || extension === 'docx') {
+                                        icon = '📝';
+                                        documentType = 'Word Document';
+                                    }
+                                }
+                                
+                                return (
+                                    <a 
+                                        href={media.mediaUrl} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        key={index}
+                                        className="flex items-center p-4 bg-gray-100 rounded-lg mb-3 hover:bg-gray-200 border border-gray-300"
+                                    >
+                                        <span className="text-3xl mr-4">{icon}</span>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="font-medium text-blue-600 truncate">{fileName || 'Document'}</p>
+                                            <p className="text-xs text-gray-500">{documentType} - Click to open</p>
+                                        </div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                );
+                            }
+                            // Unknown media type - show generic entry
+                            else {
+                                return (
+                                    <div key={index} className="flex items-center p-3 bg-gray-50 rounded mb-3 border border-gray-200">
+                                        <span className="text-2xl mr-3">📎</span>
+                                        <span className="text-sm text-gray-600">
+                                            Attachment ({media.mediaType || 'unknown'})
+                                            {media.mediaUrl && 
+                                                <a 
+                                                    href={media.mediaUrl} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="ml-2 text-blue-500 hover:underline"
+                                                >
+                                                    Open
+                                                </a>
+                                            }
+                                        </span>
+                                    </div>
+                                );
+                            }
+                        })}
+                    </div>
+                )}
+                
+                {/* Backward compatibility for the legacy image format */}
+                {!post.media && post.image && (
                     <Link href={`/post/${post.id}`}>
                         <div className="relative w-full h-auto rounded-lg overflow-hidden max-h-96 cursor-pointer">
                             <Image 
@@ -209,12 +306,13 @@ export default function PostCard({ post, onLike }) {
             <div className="flex justify-between text-sm text-gray-500 mb-3">
                 <div>{post.likes} likes</div>
                 <div>
-                    {countAllComments(comments)} comments
+                    {comments.length} comments
                 </div>
             </div>
             
             {/* Post actions */}
-            <div className="flex border-t border-b py-2 mb-3">                <button 
+            <div className="flex border-t border-b py-2 mb-3">
+                <button 
                     onClick={() => onLike(post.id)}
                     className={`flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg ${post.isLiked ? 'text-blue-500 font-medium' : ''}`}
                 >
@@ -277,19 +375,4 @@ export default function PostCard({ post, onLike }) {
             )}
         </div>
     );
-}
-
-// Helper function to count all comments and replies recursively
-function countAllComments(comments) {
-    return comments.reduce((total, comment) => {
-        // Count this comment
-        let count = 1;
-        
-        // Count all its replies recursively
-        if (comment.replies && comment.replies.length > 0) {
-            count += countAllComments(comment.replies);
-        }
-        
-        return total + count;
-    }, 0);
 }
