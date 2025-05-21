@@ -4,15 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { showToast } from "../../utils/toast";
 import useComment from "../../hooks/useComment";
+import useVote from "../../hooks/useVote";
 
 export default function PostCard({ post, onLike }) {
     const [showComments, setShowComments] = useState(false);
-    
-    // State to track voting state changes after initial render
-    const [voteState, setVoteState] = useState({
-        isVoted: post.isLiked,
-        count: post.likes
-    });
     
     // Use our comments hook
     const {
@@ -31,12 +26,22 @@ export default function PostCard({ post, onLike }) {
         initialComments: post.comments || []
     });
     
+    // Use our vote hook
+    const {
+        isVoted,
+        voteCount,
+        toggleVote,
+        updateVoteState
+    } = useVote({
+        postId: post.id,
+        initialVoted: post.isLiked,
+        initialVoteCount: post.likes,
+        onVoteChange: () => onLike(post.id) // Sync with parent state via callback
+    });
+    
     // Update local vote state when post prop changes
     useEffect(() => {
-        setVoteState({
-            isVoted: post.isLiked,
-            count: post.likes
-        });
+        updateVoteState(post.isLiked, post.likes);
     }, [post.isLiked, post.likes]);
     
     // Recursive comment component for rendering comments at any nesting level
@@ -106,81 +111,6 @@ export default function PostCard({ post, onLike }) {
                 return '📝';
             default:
                 return '📎';
-        }
-    };
-    
-    // Function to handle post voting via the API
-    const handleVote = async (postId) => {
-        // Track vote state before the API call
-        const wasVoted = voteState.isVoted;
-        
-        // Update our local vote state (optimistic update)
-        const newCount = wasVoted ? Math.max(0, voteState.count - 1) : voteState.count + 1;
-        setVoteState({
-            isVoted: !wasVoted,
-            count: newCount
-        });
-        
-        // Also update the global state via the provided onLike function
-        onLike(postId);
-        
-        try {
-            // Make API request to toggle the vote
-            const response = await fetch(`/api/proxy/post-vote/${postId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                // Show success message
-                const successText = wasVoted ? 'Vote removed' : 'Vote added';
-                showToast(successText, 'success');
-            } else {
-                // If the request failed, parse the error and show a toast
-                let errorMessage = 'Failed to process vote';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || `Error ${response.status}`;
-                } catch (parseError) {
-                    errorMessage = `Server error (${response.status})`;
-                }
-                
-                // Revert the optimistic update
-                setVoteState({
-                    isVoted: wasVoted,
-                    count: wasVoted ? voteState.count + 1 : Math.max(0, voteState.count - 1)
-                });
-                
-                // Also revert the global state
-                onLike(postId);
-                
-                // Show appropriate error message
-                if (response.status === 401) {
-                    showToast('Please log in to vote', 'error');
-                } else if (response.status === 403) {
-                    showToast('You don\'t have permission to vote on this post', 'error');
-                } else if (response.status === 404) {
-                    showToast('This post no longer exists', 'error');
-                } else {
-                    showToast(errorMessage, 'error');
-                }
-                
-                console.error('Vote operation failed:', errorMessage);
-            }
-        } catch (error) {
-            // If there's a network or other error, revert both local and global states
-            setVoteState({
-                isVoted: wasVoted,
-                count: wasVoted ? voteState.count + 1 : Math.max(0, voteState.count - 1)
-            });
-            
-            // Also revert the global state
-            onLike(postId);
-            
-            showToast('Network error while processing vote', 'error');
-            console.error('Error voting on post:', error);
         }
     };
     
@@ -352,8 +282,8 @@ export default function PostCard({ post, onLike }) {
             {/* Post stats */}
             <div className="flex justify-between text-sm text-gray-500 mb-3">
                 <div>
-                    <span className={`inline-block mr-1 ${voteState.isVoted ? 'text-blue-500' : ''}`}>⬆️</span>
-                    {voteState.count} {voteState.count === 1 ? 'vote' : 'votes'}
+                    <span className={`inline-block mr-1 ${isVoted ? 'text-blue-500' : ''}`}>⬆️</span>
+                    {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
                 </div>
                 <div>
                     <span className="inline-block mr-1">💬</span>
@@ -364,14 +294,14 @@ export default function PostCard({ post, onLike }) {
             {/* Post actions */}
             <div className="flex border-t border-b py-2 mb-3">
                 <button 
-                    onClick={() => handleVote(post.id)}
-                    className={`flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg ${voteState.isVoted ? 'text-blue-500 font-medium' : ''}`}
-                    aria-label={voteState.isVoted ? 'Remove vote' : 'Vote for this post'}
+                    onClick={toggleVote}
+                    className={`flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg ${isVoted ? 'text-blue-500 font-medium' : ''}`}
+                    aria-label={isVoted ? 'Remove vote' : 'Vote for this post'}
                 >
                     <span className="mr-2" role="img" aria-label="vote">
-                        {voteState.isVoted ? '⬆️' : '👍'}
+                        {isVoted ? '⬆️' : '👍'}
                     </span> 
-                    {voteState.isVoted ? 'Voted' : 'Vote'}
+                    {isVoted ? 'Voted' : 'Vote'}
                 </button>
                 <button 
                     onClick={handleToggleComments} 
