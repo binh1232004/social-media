@@ -6,14 +6,12 @@ import { showToast } from "../../utils/toast";
 import { addComment } from "../../utils/postComment";
 
 export default function PostCard({ post, onLike }) {
- 
     const [showComments, setShowComments] = useState(false);
     const [comment, setComment] = useState("");
-    const [replyTo, setReplyTo] = useState(null);
-    // Use post comments from props or empty array
+    const [replyTo, setReplyTo] = useState(null);    // Use post comments from props or empty array
     const [comments, setComments] = useState(post.comments || []);
     const [isLoadingComments, setIsLoadingComments] = useState(false);
-     
+    
     // State to track voting state changes after initial render
     const [voteState, setVoteState] = useState({
         isVoted: post.isLiked,
@@ -30,15 +28,13 @@ export default function PostCard({ post, onLike }) {
     
     // Function to add a comment or reply at any nesting level with temp ID
     const addNestedComment = (commentId, commentText, commentsArray, tempId) => {
-        // Guard against non-array commentsArray
-        if (!Array.isArray(commentsArray)) return [];
-        
         return commentsArray.map(c => {
             if (c.id === commentId) {
                 // Found the target comment, add a reply
                 return {
                     ...c,
                     replies: [
+                        ...c.replies,
                         {
                             id: tempId || new Date().getTime(),
                             user: "You",
@@ -65,9 +61,6 @@ export default function PostCard({ post, onLike }) {
     
     // Function to replace an optimistic comment with the real one from the API
     const replaceOptimisticComment = (commentsArray, tempId, realComment) => {
-        // Guard against non-array commentsArray
-        if (!Array.isArray(commentsArray)) return [realComment];
-        
         return commentsArray.map(c => {
             if (c.id === tempId) {
                 return realComment;
@@ -81,11 +74,7 @@ export default function PostCard({ post, onLike }) {
         });
     };
     
-    // Function to remove an optimistic comment if the API request fails
-    const removeOptimisticComment = (commentsArray, tempId) => {
-        // Guard against non-array commentsArray
-        if (!Array.isArray(commentsArray)) return [];
-        
+    // Function to remove an optimistic comment if the API request fails    const removeOptimisticComment = (commentsArray, tempId) => {
         return commentsArray.map(c => {
             if (c.replies && c.replies.length > 0) {
                 return {
@@ -96,8 +85,21 @@ export default function PostCard({ post, onLike }) {
             return c;
         }).filter(c => c.id !== tempId);
     };
-    
-    const handleAddComment = async (e) => {
+      // Function to replace an optimistic comment with the real one from the API
+    const replaceOptimisticComment = (commentsArray, tempId, realComment) => {
+        return commentsArray.map(c => {
+            if (c.id === tempId) {
+                return realComment;
+            } else if (c.replies && c.replies.length > 0) {
+                return {
+                    ...c,
+                    replies: replaceOptimisticComment(c.replies, tempId, realComment)
+                };
+            }
+            return c;
+        });
+    };
+      const handleAddComment = async (e) => {
         e.preventDefault();
         if (!comment.trim()) return;
         
@@ -121,11 +123,11 @@ export default function PostCard({ post, onLike }) {
         
         if (replyTo) {
             // Optimistic update for replies
-            setComments(prev => addNestedComment(replyTo.commentId, commentText, Array.isArray(prev) ? prev : [], tempId));
+            setComments(addNestedComment(replyTo.commentId, commentText, comments, tempId));
             setReplyTo(null);
         } else {
             // Optimistic update for top-level comments
-            setComments(prev => Array.isArray(prev) ? [tempComment, ...prev] : [tempComment]);
+            setComments(prev => [tempComment, ...prev]);
         }
         
         try {
@@ -148,23 +150,23 @@ export default function PostCard({ post, onLike }) {
                 
                 // Replace the temp comment with the real one
                 if (replyTo) {
-                    setComments(prev => 
-                        Array.isArray(prev) ? replaceOptimisticComment(prev, tempId, apiComment) : [apiComment]
+                    setComments(comments => 
+                        replaceOptimisticComment(comments, tempId, apiComment)
                     );
                 } else {
-                    setComments(prev => 
-                        Array.isArray(prev) ? prev.map(c => c.id === tempId ? apiComment : c) : [apiComment]
+                    setComments(comments => 
+                        comments.map(c => c.id === tempId ? apiComment : c)
                     );
                 }
             } else {
                 // Remove the optimistic comment on error
                 if (replyTo) {
-                    setComments(prev =>
-                        Array.isArray(prev) ? removeOptimisticComment(prev, tempId) : []
+                    setComments(comments =>
+                        removeOptimisticComment(comments, tempId)
                     );
                 } else {
-                    setComments(prev => 
-                        Array.isArray(prev) ? prev.filter(c => c.id !== tempId) : []
+                    setComments(comments => 
+                        comments.filter(c => c.id !== tempId)
                     );
                 }
                 
@@ -176,12 +178,12 @@ export default function PostCard({ post, onLike }) {
             
             // Remove the optimistic comment on error
             if (replyTo) {
-                setComments(prev =>
-                    Array.isArray(prev) ? removeOptimisticComment(prev, tempId) : []
+                setComments(comments =>
+                    removeOptimisticComment(comments, tempId)
                 );
             } else {
-                setComments(prev => 
-                    Array.isArray(prev) ? prev.filter(c => c.id !== tempId) : []
+                setComments(comments => 
+                    comments.filter(c => c.id !== tempId)
                 );
             }
             
@@ -215,8 +217,7 @@ export default function PostCard({ post, onLike }) {
                 return '📎';
         }
     };
-    
-    // Recursive comment component for rendering comments at any nesting level
+      // Recursive comment component for rendering comments at any nesting level
     const Comment = ({ comment, nestLevel = 0 }) => {
         const maxNestLevel = 5; // Maximum nesting level to prevent too deep nesting
         const currentNestLevel = Math.min(nestLevel, maxNestLevel);
@@ -303,9 +304,7 @@ export default function PostCard({ post, onLike }) {
             console.error("Error formatting date:", e);
             return "Unknown time";
         }
-    };
-    
-    // Function to handle post voting via the API
+    };// Function to handle post voting via the API
     const handleVote = async (postId) => {
         // Track vote state before the API call
         const wasVoted = voteState.isVoted;
@@ -328,8 +327,7 @@ export default function PostCard({ post, onLike }) {
                     'Content-Type': 'application/json'
                 }
             });
-            
-            if (response.ok) {
+              if (response.ok) {
                 // Show success message
                 const successText = wasVoted ? 'Vote removed' : 'Vote added';
                 showToast(successText, 'success');
@@ -364,8 +362,7 @@ export default function PostCard({ post, onLike }) {
                 }
                 
                 console.error('Vote operation failed:', errorMessage);
-            }
-        } catch (error) {
+            }        } catch (error) {
             // If there's a network or other error, revert both local and global states
             setVoteState({
                 isVoted: wasVoted,
@@ -417,7 +414,24 @@ export default function PostCard({ post, onLike }) {
                     setIsLoadingComments(false);
                 }, 1000);
                 
+                /* Real API implementation would be:
                 
+                const response = await fetch(`/api/proxy/post-comments/${post.id}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setComments(data.map(comment => ({
+                        id: comment.commentId,
+                        userId: comment.userId,
+                        user: comment.userName || "User", // API would ideally return userName
+                        content: comment.content,
+                        postedAt: comment.postedAt,
+                        replies: [] // Or process nested replies if available
+                    })));
+                } else {
+                    showToast('Failed to load comments', 'error');
+                }
+                
+                */
             } catch (error) {
                 console.error('Error loading comments:', error);
                 showToast('Failed to load comments', 'error');
@@ -584,9 +598,7 @@ export default function PostCard({ post, onLike }) {
                         </div>
                     </Link>
                 )}
-            </div>
-            
-            {/* Post stats */}
+            </div>            {/* Post stats */}
             <div className="flex justify-between text-sm text-gray-500 mb-3">
                 <div>
                     <span className={`inline-block mr-1 ${voteState.isVoted ? 'text-blue-500' : ''}`}>⬆️</span>
@@ -599,8 +611,7 @@ export default function PostCard({ post, onLike }) {
             </div>
             
             {/* Post actions */}
-            <div className="flex border-t border-b py-2 mb-3">
-                <button 
+            <div className="flex border-t border-b py-2 mb-3">                <button 
                     onClick={() => handleVote(post.id)}
                     className={`flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg ${voteState.isVoted ? 'text-blue-500 font-medium' : ''}`}
                     aria-label={voteState.isVoted ? 'Remove vote' : 'Vote for this post'}
@@ -609,8 +620,7 @@ export default function PostCard({ post, onLike }) {
                         {voteState.isVoted ? '⬆️' : '👍'}
                     </span> 
                     {voteState.isVoted ? 'Voted' : 'Vote'}
-                </button>
-                <button 
+                </button>                <button 
                     onClick={toggleComments} 
                     className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg"
                 >
@@ -621,8 +631,7 @@ export default function PostCard({ post, onLike }) {
                     <span className="mr-2">↗️</span> Share
                 </button>
             </div>
-            
-            {/* Comments section */}
+              {/* Comments section */}
             {showComments && (
                 <div>
                     <div className="mb-3 space-y-3">
