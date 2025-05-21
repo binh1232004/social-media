@@ -3,32 +3,21 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { showToast } from "../../utils/toast";
-import useComments from "../../hooks/useComments";
+import { addComment } from "../../utils/postComment";
 
 export default function PostCard({ post, onLike }) {
+ 
     const [showComments, setShowComments] = useState(false);
-    
+    const [comment, setComment] = useState("");
+    const [replyTo, setReplyTo] = useState(null);
+    // Use post comments from props or empty array
+    const [comments, setComments] = useState(post.comments || []);
+    const [isLoadingComments, setIsLoadingComments] = useState(false);
+     
     // State to track voting state changes after initial render
     const [voteState, setVoteState] = useState({
         isVoted: post.isLiked,
         count: post.likes
-    });
-    
-    // Use our comments hook
-    const {
-        comments,
-        comment,
-        setComment,
-        replyTo,
-        isLoadingComments,
-        handleAddComment,
-        handleReply,
-        cancelReply,
-        toggleComments,
-        formatRelativeTime
-    } = useComments({ 
-        postId: post.id,
-        initialComments: post.comments || []
     });
     
     // Update local vote state when post prop changes
@@ -38,6 +27,194 @@ export default function PostCard({ post, onLike }) {
             count: post.likes
         });
     }, [post.isLiked, post.likes]);
+    
+    // Function to add a comment or reply at any nesting level with temp ID
+    const addNestedComment = (commentId, commentText, commentsArray, tempId) => {
+        // Guard against non-array commentsArray
+        if (!Array.isArray(commentsArray)) return [];
+        
+        return commentsArray.map(c => {
+            if (c.id === commentId) {
+                // Found the target comment, add a reply
+                return {
+                    ...c,
+                    replies: [
+                        {
+                            id: tempId || new Date().getTime(),
+                            user: "You",
+                            text: commentText,
+                            content: commentText,
+                            time: "Just now",
+                            postedAt: new Date().toISOString(),
+                            isOptimistic: !!tempId, // Flag optimistic updates
+                            replies: []
+                        },
+                        ...c.replies
+                    ]
+                };
+            } else if (c.replies && c.replies.length > 0) {
+                // Search in replies recursively
+                return {
+                    ...c,
+                    replies: addNestedComment(commentId, commentText, c.replies, tempId)
+                };
+            }
+            return c;
+        });
+    };
+    
+    // Function to replace an optimistic comment with the real one from the API
+    const replaceOptimisticComment = (commentsArray, tempId, realComment) => {
+        // Guard against non-array commentsArray
+        if (!Array.isArray(commentsArray)) return [realComment];
+        
+        return commentsArray.map(c => {
+            if (c.id === tempId) {
+                return realComment;
+            } else if (c.replies && c.replies.length > 0) {
+                return {
+                    ...c,
+                    replies: replaceOptimisticComment(c.replies, tempId, realComment)
+                };
+            }
+            return c;
+        });
+    };
+    
+    // Function to remove an optimistic comment if the API request fails
+    const removeOptimisticComment = (commentsArray, tempId) => {
+        // Guard against non-array commentsArray
+        if (!Array.isArray(commentsArray)) return [];
+        
+        return commentsArray.map(c => {
+            if (c.replies && c.replies.length > 0) {
+                return {
+                    ...c,
+                    replies: c.replies.filter(r => r.id !== tempId)
+                };
+            }
+            return c;
+        }).filter(c => c.id !== tempId);
+    };
+    
+    const handleAddComment = async (e) => {
+        e.preventDefault();
+        if (!comment.trim()) return;
+        
+        // Save the comment text and reset input
+        const commentText = comment;
+        setComment("");
+        
+        // Show loading state
+        const tempId = `temp-${Date.now()}`;
+        const tempComment = {
+            id: tempId,
+            userId: "currentUser", // Will be replaced with actual data
+            user: "You",
+            text: commentText,
+            content: commentText,
+            time: "Just now",
+            postedAt: new Date().toISOString(),
+            isOptimistic: true, // Flag to identify optimistic updates
+            replies: []
+        };
+        
+        if (replyTo) {
+            // Optimistic update for replies
+            setComments(prev => addNestedComment(replyTo.commentId, commentText, Array.isArray(prev) ? prev : [], tempId));
+            setReplyTo(null);
+        } else {
+            // Optimistic update for top-level comments
+            setComments(prev => Array.isArray(prev) ? [tempComment, ...prev] : [tempComment]);
+        }
+        
+        try {
+            // Submit comment to API
+            const parentId = replyTo ? replyTo.commentId : null;
+            const newComment = await addComment(post.id, commentText, parentId);
+            
+            if (newComment) {
+                // Format the returned comment to match our UI structure
+                const apiComment = {
+                    id: newComment.commentId,
+                    userId: newComment.userId,
+                    user: "You", // We'd typically get user info from the API or context
+                    text: newComment.content,
+                    content: newComment.content,
+                    time: "Just now", // Would use formatTimeAgo(newComment.postedAt) in a real app
+                    postedAt: newComment.postedAt,
+                    replies: []
+                };
+                
+                // Replace the temp comment with the real one
+                if (replyTo) {
+                    setComments(prev => 
+                        Array.isArray(prev) ? replaceOptimisticComment(prev, tempId, apiComment) : [apiComment]
+                    );
+                } else {
+                    setComments(prev => 
+                        Array.isArray(prev) ? prev.map(c => c.id === tempId ? apiComment : c) : [apiComment]
+                    );
+                }
+            } else {
+                // Remove the optimistic comment on error
+                if (replyTo) {
+                    setComments(prev =>
+                        Array.isArray(prev) ? removeOptimisticComment(prev, tempId) : []
+                    );
+                } else {
+                    setComments(prev => 
+                        Array.isArray(prev) ? prev.filter(c => c.id !== tempId) : []
+                    );
+                }
+                
+                // Show error
+                showToast('Failed to add comment', 'error');
+            }
+        } catch (error) {
+            console.error('Error adding comment:', error);
+            
+            // Remove the optimistic comment on error
+            if (replyTo) {
+                setComments(prev =>
+                    Array.isArray(prev) ? removeOptimisticComment(prev, tempId) : []
+                );
+            } else {
+                setComments(prev => 
+                    Array.isArray(prev) ? prev.filter(c => c.id !== tempId) : []
+                );
+            }
+            
+            showToast('Error posting comment', 'error');
+        }
+    };
+
+    const handleReply = (commentId, userName) => {
+        setReplyTo({ commentId, userName });
+        setComment(`@${userName} `);
+    };
+    
+    const cancelReply = () => {
+        setReplyTo(null);
+        setComment("");
+    };
+    
+    // Helper function to get file icon based on extension
+    const getFileIcon = (fileName) => {
+        if (!fileName) return '📎';
+        
+        const extension = fileName.split('.').pop().toLowerCase();
+        
+        switch (extension) {
+            case 'pdf':
+                return '📄';
+            case 'doc':
+            case 'docx':
+                return '📝';
+            default:
+                return '📎';
+        }
+    };
     
     // Recursive comment component for rendering comments at any nesting level
     const Comment = ({ comment, nestLevel = 0 }) => {
@@ -92,20 +269,39 @@ export default function PostCard({ post, onLike }) {
         );
     };
     
-    // Helper function to get file icon based on extension
-    const getFileIcon = (fileName) => {
-        if (!fileName) return '📎';
+    // Helper function to format relative time from ISO string
+    const formatRelativeTime = (dateString) => {
+        if (!dateString) return "Recently";
         
-        const extension = fileName.split('.').pop().toLowerCase();
-        
-        switch (extension) {
-            case 'pdf':
-                return '📄';
-            case 'doc':
-            case 'docx':
-                return '📝';
-            default:
-                return '📎';
+        try {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffSeconds < 60) {
+                return "Just now";
+            }
+            
+            const diffMinutes = Math.floor(diffSeconds / 60);
+            if (diffMinutes < 60) {
+                return `${diffMinutes}m ago`;
+            }
+            
+            const diffHours = Math.floor(diffMinutes / 60);
+            if (diffHours < 24) {
+                return `${diffHours}h ago`;
+            }
+            
+            const diffDays = Math.floor(diffHours / 24);
+            if (diffDays < 7) {
+                return `${diffDays}d ago`;
+            }
+            
+            // For older dates, show the date
+            return date.toLocaleDateString();
+        } catch (e) {
+            console.error("Error formatting date:", e);
+            return "Unknown time";
         }
     };
     
@@ -185,9 +381,50 @@ export default function PostCard({ post, onLike }) {
     };
     
     // Function to toggle comments and load them if needed
-    const handleToggleComments = async () => {
-        const newShowComments = await toggleComments(showComments);
+    const toggleComments = async () => {
+        const newShowComments = !showComments;
         setShowComments(newShowComments);
+        
+        // If showing comments and we don't have any yet, try to load them
+        if (newShowComments && comments.length === 0 && !isLoadingComments) {
+            setIsLoadingComments(true);
+            
+            try {
+                // In a real implementation, you'd fetch comments from an API
+                // For now, we'll use a timeout to simulate an API call
+                setTimeout(() => {
+                    // This would be replaced with real API data
+                    const demoComments = [
+                        { 
+                            id: `api-${Date.now()}-1`,
+                            userId: 'user1',
+                            user: "Alex Kim", 
+                            content: "Great post!", 
+                            postedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+                            replies: []
+                        },
+                        { 
+                            id: `api-${Date.now()}-2`,
+                            userId: 'user2',
+                            user: "Sarah Johnson", 
+                            content: "Love this content! Thanks for sharing.", 
+                            postedAt: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
+                            replies: [] 
+                        }
+                    ];
+                    
+                    setComments(demoComments);
+                    setIsLoadingComments(false);
+                }, 1000);
+                
+                
+            } catch (error) {
+                console.error('Error loading comments:', error);
+                showToast('Failed to load comments', 'error');
+            } finally {
+                setIsLoadingComments(false);
+            }
+        }
     };
     
     return (
@@ -374,7 +611,7 @@ export default function PostCard({ post, onLike }) {
                     {voteState.isVoted ? 'Voted' : 'Vote'}
                 </button>
                 <button 
-                    onClick={handleToggleComments} 
+                    onClick={toggleComments} 
                     className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg"
                 >
                     <span className="mr-2">💬</span> Comment
