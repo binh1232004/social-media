@@ -61,11 +61,9 @@ export async function POST(request, { params }) {
 
         // Return success response
         return NextResponse.json({ success: true }, { status: 200 });    } catch (error) {
-        console.error("Error voting on post:", error);
-
-        // Format error response with more detailed information
+        console.error("Error voting on post:", error);        // Format error response with more detailed information
         const status = error.response?.status || 500;
-        let message = "Đã xảy ra lỗi khi bình chọn bài viết";
+        let message = "An error occurred while voting on the post";
 
         if (error.response?.data) {
             message = error.response.data.message || error.response.data.error || message;
@@ -73,13 +71,13 @@ export async function POST(request, { params }) {
         
         // Handle specific error codes
         if (status === 401) {
-            message = "Bạn cần đăng nhập để bình chọn";
+            message = "You need to be logged in to vote";
         } else if (status === 403) {
-            message = "Bạn không có quyền bình chọn cho bài viết này";
+            message = "You don't have permission to vote on this post";
         } else if (status === 404) {
-            message = "Không tìm thấy bài viết";
+            message = "This post no longer exists";
         } else if (status === 429) {
-            message = "Quá nhiều yêu cầu, vui lòng thử lại sau";
+            message = "Too many requests, please try again later";
         }
 
         return NextResponse.json({ error: message }, { status });

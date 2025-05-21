@@ -78,10 +78,15 @@ export default function usePost(postId) {
 
     fetchPost();
   }, [postId, refreshTrigger]);
-
   // Function to refresh post
-  const refreshPost = () => {
-    setRefreshTrigger(prev => prev + 1);
+  const refreshPost = (updatedPostData) => {
+    if (updatedPostData) {
+      // If post data is provided, update immediately without API call
+      setPost(updatedPostData);
+    } else {
+      // Otherwise trigger a refetch from the API
+      setRefreshTrigger(prev => prev + 1);
+    }
   };
 
   return {

@@ -46,11 +46,21 @@ export default function PostPage() {
     const postId = params.id;
     
     const { post, loading, error, refreshPost } = usePost(postId);
-    
-    // Handle like action
+      // Handle like action
     const handleLike = (id) => {
-        // This could be implemented with a real API call later
-        console.log(`Liked post with ID: ${id}`);
+        // Update the post state with toggled like status
+        if (post) {
+            const newIsLiked = !post.isLiked;
+            const newLikes = newIsLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1);
+            
+            refreshPost({
+                ...post,
+                isLiked: newIsLiked,
+                likes: newLikes
+            });
+        }
+        // Log the action
+        console.log(`Toggled like on post with ID: ${id}`);
     };
       // Format post for the PostCard component if available
     const formattedPost = post ? {

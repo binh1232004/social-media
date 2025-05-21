@@ -31,11 +31,16 @@ export default function FeedSection({ posts = [], loading = false, refreshPosts 
         
         setFeedPosts([newPost, ...feedPosts]);
     };
-    
-    const handleLike = (postId) => {
-        setFeedPosts(feedPosts.map(post => 
-            post.id === postId ? {...post, likes: post.likes + 1} : post
-        ));
+      const handleLike = (postId) => {
+        setFeedPosts(feedPosts.map(post => {
+            if (post.id === postId) {
+                // Toggle isLiked status and update likes count
+                const newIsLiked = !post.isLiked;
+                const newLikes = newIsLiked ? post.likes + 1 : Math.max(0, post.likes - 1);
+                return {...post, isLiked: newIsLiked, likes: newLikes};
+            }
+            return post;
+        }));
     };
     
     return (
