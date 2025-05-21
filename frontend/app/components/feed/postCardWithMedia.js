@@ -316,7 +316,7 @@ export default function PostCard({ post, onLike }) {
                     onClick={() => onLike(post.id)}
                     className={`flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg ${post.isLiked ? 'text-blue-500 font-medium' : ''}`}
                 >
-                    <span className="mr-2">{post.isLiked ? '👍' : '👍'}</span> {post.isLiked ? 'Liked' : 'Like'}
+                    <span className="mr-2">{post.isLiked ? '👍' : '👍'}</span> {post.isLiked ? 'Voted' : 'Vote'}
                 </button>
                 <button 
                     onClick={() => setShowComments(!showComments)} 
