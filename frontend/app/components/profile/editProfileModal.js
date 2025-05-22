@@ -5,14 +5,14 @@ import Image from "next/image";
 import axios from "axios";
 import { getAuthToken } from "../../utils/auth";
 import { publish } from "../../utils/events";
+import Toast from "../ui/toast";
 
 export default function EditProfileModal({
     profileData,
     isOpen,
     onClose,
     onSuccess,
-}) {
-    const [formData, setFormData] = useState({
+}) {    const [formData, setFormData] = useState({
         fullName: "",
         intro: "",
         birthday: "",
@@ -22,6 +22,7 @@ export default function EditProfileModal({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
+    const [toast, setToast] = useState(null);
     // Initialize form with existing profile data
     useEffect(() => {
         if (profileData) {
@@ -99,52 +100,87 @@ export default function EditProfileModal({
                 throw new Error("You must be logged in to update your profile");
             }
 
-            // Create a FormData object for multipart/form-data submission
-            const apiFormData = new FormData();
+            // Create a FormData object for profile update
+            const profileUpdateData = new FormData();
 
             // Add user data to the form
-            apiFormData.append("fullName", formData.fullName);
-            if (formData.intro) apiFormData.append("intro", formData.intro);
+            profileUpdateData.append("fullName", formData.fullName);
+            if (formData.intro) profileUpdateData.append("intro", formData.intro);
             if (formData.birthday)
-                apiFormData.append("birthday", formData.birthday);
-            if (formData.gender) apiFormData.append("gender", formData.gender);
+                profileUpdateData.append("birthday", formData.birthday);
+            if (formData.gender) profileUpdateData.append("gender", formData.gender);
 
-            // Handle image upload
+            // Step 1: Handle image upload if there's a new image file
+            let imageUrl = formData.image;
             if (formData.image instanceof File) {
-                // If a new image file was selected, append it as 'imageFile'
-                apiFormData.append("imageFile", formData.image);
-                console.log("Uploading image file:", formData.image.name);
-            } else if (
-                formData.image &&
-                typeof formData.image === "string" &&
-                formData.image !== profileData.avatar
-            ) {
-                // If it's a string URL different from the current avatar, use it
-                apiFormData.append("image", formData.image);
+                // Create a separate FormData for the image upload
+                const imageFormData = new FormData();
+                imageFormData.append("file", formData.image);
+
+                // Upload the image to Azure through the media API
+                const uploadResponse = await axios.post(
+                    "/api/upload-media",
+                    imageFormData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            // Content-Type is automatically set by axios for FormData
+                        },
+                    }
+                );
+
+                // Get the image URL from the response
+                if (uploadResponse.data && uploadResponse.data.mediaUrl) {
+                    imageUrl = uploadResponse.data.mediaUrl;
+                    console.log("Image uploaded successfully:", imageUrl);
+                } else {
+                    console.error(
+                        "Image upload response missing mediaUrl:",
+                        uploadResponse.data
+                    );
+                    throw new Error("Failed to upload image. Please try again.");
+                }
             }
 
-            // Make the API call to update the profile
+            // If we have an image URL (either from the upload or an existing URL), add it to the profile update data
+            if (
+                imageUrl &&
+                typeof imageUrl === "string" &&
+                (imageUrl !== profileData.avatar || formData.image instanceof File)
+            ) {
+                profileUpdateData.append("image", imageUrl);
+            }
+
+            // Step 2: Make the API call to update the profile
             const response = await axios.put(
                 `/api/proxy/user/${profileData.userId}`,
-                apiFormData,
+                profileUpdateData,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         // Content-Type is automatically set by axios for FormData
                     },
                 }
-            );
-            if (response.status === 200 || response.status === 204) {
+            );            if (response.status === 200 || response.status === 204) {
+                // Show success toast
+                setToast({
+                    message: 'Profile updated successfully!',
+                    type: 'success'
+                });
+                
                 // Notify all components that the avatar might have changed
-                publish("avatar-updated", response.data?.image || null);
+                publish("avatar-updated", response.data?.image || imageUrl || null);
 
-                // Call success callback with the updated profile data (if available)
-                if (response.data) {
-                    onSuccess?.(response.data);
-                } else {
-                    onSuccess?.();
-                }
-                onClose();
+                // Add a short delay to show the toast before closing the modal
+                setTimeout(() => {
+                    // Call success callback with the updated profile data (if available)
+                    if (response.data) {
+                        onSuccess?.(response.data);
+                    } else {
+                        onSuccess?.();
+                    }
+                    onClose();
+                }, 1500); // 1.5 seconds delay to show the toast
             }
         } catch (err) {
             console.error("Error updating profile:", err);
@@ -172,10 +208,17 @@ export default function EditProfileModal({
         }
     };
 
-    if (!isOpen) return null;
-
-    return (
+    if (!isOpen) return null;    return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
+            {/* Toast notification */}
+            {toast && (
+                <Toast 
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
+            
             {/* Backdrop */}
             <div
                 className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
@@ -192,7 +235,7 @@ export default function EditProfileModal({
                     <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
                         <div className="flex justify-between items-center">
                             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                                Edit Profile
+                                Chỉnh sửa trang cá nhân
                             </h3>
                             <button
                                 type="button"
@@ -273,7 +316,7 @@ export default function EditProfileModal({
                                     htmlFor="fullName"
                                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
-                                    Full Name
+                                    Họ và tên
                                 </label>
                                 <input
                                     type="text"
@@ -292,7 +335,7 @@ export default function EditProfileModal({
                                     htmlFor="intro"
                                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
-                                    Bio
+                                    Giới thiệu
                                 </label>
                                 <textarea
                                     id="intro"
@@ -310,7 +353,7 @@ export default function EditProfileModal({
                                     htmlFor="birthday"
                                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
-                                    Birthday
+                                    Ngày sinh
                                 </label>
                                 <input
                                     type="date"
@@ -328,7 +371,7 @@ export default function EditProfileModal({
                                     htmlFor="gender"
                                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
-                                    Gender
+                                   Giới tính
                                 </label>
                                 <select
                                     id="gender"
@@ -337,10 +380,10 @@ export default function EditProfileModal({
                                     onChange={handleChange}
                                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 >
-                                    <option value="">Select Gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
+                                    <option value="">Lựa chọn giới tính</option>
+                                    <option value="male">Nam</option>
+                                    <option value="female">Nữ</option>
+                                    <option value="other">Khác</option>
                                 </select>
                             </div>
 
@@ -359,14 +402,14 @@ export default function EditProfileModal({
                                 onClick={onClose}
                                 className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
                             >
-                                Cancel
+                                Đóng
                             </button>
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
                                 className="px-4 py-2 bg-blue-500 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                             >
-                                {isSubmitting ? "Saving..." : "Save Changes"}
+                                {isSubmitting ? "Lưu..." : "Lưu thay đổi"}
                             </button>
                         </div>
                     </form>

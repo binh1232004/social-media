@@ -16,10 +16,18 @@ export default function useUserPosts(userId, pageSize = 10) {
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(1);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    
+    // Handle null userId scenario gracefully
+    const validUserId = userId || null;
     // Function to fetch posts from API
     const fetchPosts = useCallback(
         async (pageNum = 1, shouldAppend = false) => {
-            if (!userId) return;
+            if (!validUserId) {
+                setInitialLoading(false);
+                setLoading(false);
+                setError("No user ID provided");
+                return;
+            }
 
             // Skip if not in browser environment
             if (typeof window === "undefined") {
@@ -49,7 +57,7 @@ export default function useUserPosts(userId, pageSize = 10) {
 
                 // Create query params
                 const params = new URLSearchParams();
-                params.append("userId", userId);
+                params.append("userId", validUserId);
                 params.append("page", pageNum);
                 params.append("pageSize", pageSize);
 
@@ -75,7 +83,7 @@ export default function useUserPosts(userId, pageSize = 10) {
 
                 // Transform the API data format to match our frontend format
                 const transformedPosts = Array.isArray(postsData)
-                    ? postsData.map((post) => {
+                    ? await Promise.all(postsData.map(async (post) => {
                           // Process and normalize media items if they exist
                           const normalizedMedia =
                               post.media?.map((mediaItem) => {
@@ -114,7 +122,29 @@ export default function useUserPosts(userId, pageSize = 10) {
                                       mediaType,
                                   };
                               }) || [];
-
+                          
+                          // Fetch user details from API if userId exists
+                          let userDetails = {
+                              name: post.userName || post.user?.name || "User",
+                              profileImage: post.userProfileImage || post.user?.profileImage || "/person.png"
+                          };
+                          
+                          if (post.userId) {
+                              try {
+                                  const userResponse = await fetch(`/api/proxy/user/${post.userId}`);
+                                  if (userResponse.ok) {
+                                      const userData = await userResponse.json();
+                                      userDetails = {
+                                          name: userData.fullName || userData.name || userDetails.name,
+                                          profileImage: userData.image || userData.avatar || userDetails.profileImage
+                                      };
+                                      console.log(`Fetched user details for post ${post.postId || post.id}:`, userDetails);
+                                  }
+                              } catch (error) {
+                                  console.warn(`Failed to fetch user details for user ID ${post.userId}:`, error);
+                              }
+                          }
+                              
                           return {
                               id: post.postId || post.id,
                               userId: post.userId,
@@ -128,16 +158,13 @@ export default function useUserPosts(userId, pageSize = 10) {
                                   post.postedAt ||
                                   post.createdAt ||
                                   new Date().toISOString(),
-                              // Include additional details
-                              user: post.userName || post.user?.name || "User",
-                              avatar:
-                                  post.userProfileImage ||
-                                  post.user?.profileImage ||
-                                  "/person.png",
+                              // Include additional details with fetched user info
+                              user: userDetails.name,
+                              avatar: userDetails.profileImage,
                               commentList: post.comments || [],
                               isLiked: post.isVotedByCurrentUser || false,
                           };
-                      })
+                      }))
                     : [];
 
                 // Update the posts state based on whether we're appending or replacing
@@ -155,7 +182,7 @@ export default function useUserPosts(userId, pageSize = 10) {
                 setLoading(false);
             }
         },
-        [userId, pageSize]
+        [validUserId, pageSize]
     );
 
     // Initial load - fetch first page when component mounts or when userId/pageSize/refreshTrigger changes
@@ -163,7 +190,7 @@ export default function useUserPosts(userId, pageSize = 10) {
         setPage(1);
         setHasMore(true);
         fetchPosts(1, false);
-    }, [userId, pageSize, refreshTrigger, fetchPosts]);
+    }, [validUserId, pageSize, refreshTrigger, fetchPosts]);
 
     // Function to load more posts (for infinite scrolling)
     const loadMorePosts = useCallback(() => {

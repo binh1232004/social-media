@@ -12,59 +12,61 @@ import Image from "next/image";
 export default function GroupPage() {
     const params = useParams();
     const groupId = params.id;
-    
+
     // State variables
     const [activeTab, setActiveTab] = useState("discussion");
     const [isMember, setIsMember] = useState(false);
     const [canViewContent, setCanViewContent] = useState(false);
     const [posts, setPosts] = useState([]);
     const [pendingPosts, setPendingPosts] = useState([]);
-      // Use our custom hook to fetch group details
-    const { 
-        groupDetails, 
-        isLoading, 
-        error, 
+    // Use our custom hook to fetch group details
+    const {
+        groupDetails,
+        isLoading,
+        error,
         isJoining,
         fetchGroupDetails,
-        joinGroup
-    } = useGroupDetails({ 
-        groupId, 
+        joinPublicGroup,
+    } = useGroupDetails({
+        groupId,
         onSuccess: (data) => {
-            console.log('Group details loaded successfully:', data);
+            console.log("Group details loaded successfully:", data);
             // Determine if user can view content based on group visibility
-            setCanViewContent(data.visibility.toLowerCase() === 'public' || isMember);
+            setCanViewContent(
+                data.visibility.toLowerCase() === "public" || isMember
+            );
         },
         onError: (err) => {
-            showToast('Failed to load group details', 'error');
-            console.error('Error loading group details:', err);
-        }
-    });// Dummy data for testing - populate with API data when ready
+            showToast("Failed to load group details", "error");
+            console.error("Error loading group details:", err);
+        },
+    }); // Dummy data for testing - populate with API data when ready
     useEffect(() => {
         // Mock data for posts - this would come from the API in real implementation
         setPosts([]);
         setPendingPosts([]);
-        
+
         // Check if user is a member - would be determined from API in real implementation
         // For now we'll just set to false by default
         setIsMember(false);
     }, [groupId]);
-    
+
     // Format the creation date for display
     const formatCreationDate = (dateString) => {
         try {
-            return formatDistance(new Date(dateString), new Date(), { addSuffix: true });
+            return formatDistance(new Date(dateString), new Date(), {
+                addSuffix: true,
+            });
         } catch (e) {
-            console.error('Error formatting date:', e);
-            return 'Unknown date';
+            console.error("Error formatting date:", e);
+            return "Unknown date";
         }
     };
-      // Handle joining the group
-    const handleJoinGroup = async () => {
+    // Handle joining the group
+    const handleJoinPublicGroup = async () => {
         try {
-            // Use our joinGroup function from the hook
-            await fetchGroupDetails(groupId);
-            const result = await joinGroup(groupId);
-            
+            const result = await joinPublicGroup(groupId);
+
             if (result) {
                 setIsMember(true);
                 setCanViewContent(true);
@@ -72,11 +74,11 @@ export default function GroupPage() {
                 await fetchGroupDetails(groupId, true);
             }
         } catch (error) {
-            console.error('Error joining group:', error);
-            showToast('Failed to join the group', 'error');
+            console.error("Error joining group:", error);
+            showToast("Failed to join the group", "error");
         }
     };
-    
+
     if (isLoading) {
         return (
             <div className="flex justify-center items-center min-h-[50vh]">
@@ -84,7 +86,7 @@ export default function GroupPage() {
             </div>
         );
     }
-    
+
     if (error || !groupDetails) {
         return (
             <div className="bg-white rounded-lg shadow p-8 mt-4 text-center">
@@ -101,7 +103,7 @@ export default function GroupPage() {
             </div>
         );
     }
-    
+
     return (
         <>
             {/* Group Header */}
@@ -109,36 +111,48 @@ export default function GroupPage() {
                 {/* Cover photo */}
                 <div className="h-48 relative bg-gray-200">
                     <Image
-                        src={groupDetails.image || '/group.png'}
+                        src={groupDetails.image || "/group.png"}
                         alt={groupDetails.groupName}
                         fill
                         className="object-cover"
                         priority
                         onError={() => {
-                            console.log("Image load error, replacing with fallback");
+                            console.log(
+                                "Image load error, replacing with fallback"
+                            );
                             // This will be handled by Next.js's built-in error handling
                         }}
                     />
-                </div>                {/* Group info */}
+                </div>{" "}
+                {/* Group info */}
                 <div className="p-4">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h1 className="text-2xl font-bold">{groupDetails.groupName}</h1>
+                            <h1 className="text-2xl font-bold">
+                                {groupDetails.groupName}
+                            </h1>
                             <p className="text-sm text-gray-500 flex items-center mt-1">
                                 <span
                                     className={`mr-2 w-2 h-2 rounded-full ${
-                                        groupDetails.visibility.toLowerCase() === "public"
+                                        groupDetails.visibility.toLowerCase() ===
+                                        "public"
                                             ? "bg-green-500"
                                             : "bg-gray-500"
                                     }`}
                                 ></span>
-                                {groupDetails.visibility.charAt(0).toUpperCase() +
-                                    groupDetails.visibility.slice(1).toLowerCase()}{" "}
-                                Group • {groupDetails.memberCount.toLocaleString()}{" "}
+                                {groupDetails.visibility
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                    groupDetails.visibility
+                                        .slice(1)
+                                        .toLowerCase()}{" "}
+                                Group •{" "}
+                                {groupDetails.memberCount.toLocaleString()}{" "}
                                 members
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
-                                Created {formatCreationDate(groupDetails.createdAt)}
+                                Created{" "}
+                                {formatCreationDate(groupDetails.createdAt)}
                             </p>
                         </div>
 
@@ -146,20 +160,27 @@ export default function GroupPage() {
                             <button className="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 rounded-md">
                                 Joined
                             </button>
-                        ) : (
-                            <button 
-                                onClick={handleJoinGroup}
+                        ) : groupDetails.visibility.toLowerCase() ===
+                          "public" ? (
+                            <button
+                                onClick={handleJoinPublicGroup}
                                 className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
                             >
-                                {groupDetails.visibility.toLowerCase() === "private"
-                                    ? "Request to Join"
-                                    : "Join Group"}
+                                Join Group
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleJoinPrivateGroup}
+                                className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
+                            >
+                                Request to Join
                             </button>
                         )}
                     </div>
 
                     <p className="mt-3">{groupDetails.description}</p>
-                </div>                {/* Tabs */}
+                </div>{" "}
+                {/* Tabs */}
                 <div className="border-t">
                     <div className="flex overflow-x-auto">
                         <button
@@ -218,24 +239,22 @@ export default function GroupPage() {
                             </>
                         )}
                     </div>
-                </div>            </div>
-            
+                </div>{" "}
+            </div>
+
             {/* Tab Content */}
-            {!canViewContent && groupDetails.visibility.toLowerCase() === "private" ? (
+            {!canViewContent &&
+            groupDetails.visibility.toLowerCase() === "private" ? (
                 <div className="bg-white rounded-lg shadow p-8 mt-4 text-center">
                     <div className="text-gray-500 mb-4">
                         <p className="mb-2">This is a private group.</p>
                         <p>You need to be a member to view its content.</p>
                     </div>
-                    <button
-                        onClick={handleJoinGroup}
-                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-                    >
-                        Request to Join Group
-                    </button>
                 </div>
             ) : (
-                <>                    {activeTab === "discussion" && (
+                <>
+                    {" "}
+                    {activeTab === "discussion" && (
                         <div>
                             {isMember ? (
                                 <>
@@ -245,13 +264,17 @@ export default function GroupPage() {
                                         ) : (
                                             <div className="bg-white rounded-lg shadow p-8 text-center">
                                                 <p className="text-gray-500">
-                                                    No posts available in this group.
+                                                    No posts available in this
+                                                    group.
                                                 </p>
                                                 <button
                                                     className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
                                                     onClick={() => {
                                                         // Add functionality to create a new post
-                                                        showToast("Create a new post to get the discussion started!", "info");
+                                                        showToast(
+                                                            "Create a new post to get the discussion started!",
+                                                            "info"
+                                                        );
                                                     }}
                                                 >
                                                     Create First Post
@@ -273,10 +296,13 @@ export default function GroupPage() {
                                     ) : (
                                         <div className="bg-white rounded-lg shadow p-8 text-center">
                                             <p className="text-gray-500">
-                                                No posts available in this group.
+                                                No posts available in this
+                                                group.
                                             </p>
                                             <button
-                                                onClick={() => setIsMember(true)}
+                                                onClick={() =>
+                                                    setIsMember(true)
+                                                }
                                                 className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
                                             >
                                                 Join Group to Post
@@ -286,7 +312,8 @@ export default function GroupPage() {
                                 </div>
                             )}
                         </div>
-                    )}{" "}                    {activeTab === "members" && (
+                    )}{" "}
+                    {activeTab === "members" && (
                         <div className="bg-white rounded-lg shadow p-4">
                             <h2 className="text-lg font-semibold mb-4">
                                 Members ({groupDetails.memberCount})
@@ -295,11 +322,17 @@ export default function GroupPage() {
                                 {/* We'll need to implement an API call to fetch members */}
                                 {/* For now, display a placeholder */}
                                 <p className="text-center text-gray-500 py-4">
-                                    Member listing will be implemented in a future update.
+                                    Member listing will be implemented in a
+                                    future update.
                                 </p>
                                 <div className="flex justify-center">
-                                    <button 
-                                        onClick={() => showToast('Member listing coming soon!', 'info')}
+                                    <button
+                                        onClick={() =>
+                                            showToast(
+                                                "Member listing coming soon!",
+                                                "info"
+                                            )
+                                        }
                                         className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
                                     >
                                         Refresh Members
@@ -308,52 +341,81 @@ export default function GroupPage() {
                             </div>
                         </div>
                     )}
-                    
                     {activeTab === "about" && (
                         <div className="bg-white rounded-lg shadow p-4">
-                            <h2 className="text-lg font-semibold mb-4">About this Group</h2>
-                            
+                            <h2 className="text-lg font-semibold mb-4">
+                                About this Group
+                            </h2>
+
                             <div className="space-y-4">
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Group Name</h3>
-                                    <p className="mt-1">{groupDetails.groupName}</p>
+                                    <h3 className="text-sm font-medium text-gray-500">
+                                        Group Name
+                                    </h3>
+                                    <p className="mt-1">
+                                        {groupDetails.groupName}
+                                    </p>
                                 </div>
-                                
+
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Description</h3>
-                                    <p className="mt-1">{groupDetails.description}</p>
+                                    <h3 className="text-sm font-medium text-gray-500">
+                                        Description
+                                    </h3>
+                                    <p className="mt-1">
+                                        {groupDetails.description}
+                                    </p>
                                 </div>
-                                
+
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Privacy</h3>
+                                    <h3 className="text-sm font-medium text-gray-500">
+                                        Privacy
+                                    </h3>
                                     <p className="mt-1 flex items-center">
                                         <span
                                             className={`mr-2 w-2 h-2 rounded-full ${
-                                                groupDetails.visibility.toLowerCase() === "public"
+                                                groupDetails.visibility.toLowerCase() ===
+                                                "public"
                                                     ? "bg-green-500"
                                                     : "bg-gray-500"
                                             }`}
                                         ></span>
-                                        {groupDetails.visibility.charAt(0).toUpperCase() +
-                                            groupDetails.visibility.slice(1).toLowerCase()}
+                                        {groupDetails.visibility
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                            groupDetails.visibility
+                                                .slice(1)
+                                                .toLowerCase()}
                                     </p>
                                 </div>
-                                
+
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Created By</h3>
-                                    <p className="mt-1">{groupDetails.createdBy}</p>
-                                </div>
-                                
-                                <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Created At</h3>
+                                    <h3 className="text-sm font-medium text-gray-500">
+                                        Created By
+                                    </h3>
                                     <p className="mt-1">
-                                        {new Date(groupDetails.createdAt).toLocaleString()}
+                                        {groupDetails.createdBy}
                                     </p>
                                 </div>
-                                
+
                                 <div>
-                                    <h3 className="text-sm font-medium text-gray-500">Member Count</h3>
-                                    <p className="mt-1">{groupDetails.memberCount.toLocaleString()} members</p>
+                                    <h3 className="text-sm font-medium text-gray-500">
+                                        Created At
+                                    </h3>
+                                    <p className="mt-1">
+                                        {new Date(
+                                            groupDetails.createdAt
+                                        ).toLocaleString()}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-500">
+                                        Member Count
+                                    </h3>
+                                    <p className="mt-1">
+                                        {groupDetails.memberCount.toLocaleString()}{" "}
+                                        members
+                                    </p>
                                 </div>
                             </div>
                         </div>

@@ -24,17 +24,19 @@ export default function ProfileHeader({ profileData, isOwnProfile = false, onPro
       {/* Simplified header without cover photo */}
       <div className="px-4 py-8 md:px-6 bg-gradient-to-r from-blue-50 to-indigo-50">
         {/* Profile details section */}
-        <div className="flex flex-col md:flex-row items-center md:items-start">
-          {/* Profile picture */}
+        <div className="flex flex-col md:flex-row items-center md:items-start">          {/* Profile picture */}
           <div className="relative mb-4 md:mb-0 md:mr-6">
-            <Image 
-              src={profileData.avatar || '/avatar.png'} 
-              alt={profileData.name || "User profile"} 
-              width={96}
-              height={96}
-              className="rounded-full border-4 border-white shadow-md"
-              priority
-            />
+            <div className="w-24 h-24 relative rounded-full border-4 border-white shadow-md overflow-hidden">
+              <Image 
+                src={profileData.avatar || '/avatar.png'} 
+                alt={profileData.name || "User profile"} 
+                fill
+                sizes="96px"
+                style={{ objectFit: 'cover' }}
+                className="rounded-full"
+                priority
+              />
+            </div>
           </div>
           
           <div className="flex flex-col md:flex-row flex-grow justify-between items-center md:items-start">
@@ -51,7 +53,7 @@ export default function ProfileHeader({ profileData, isOwnProfile = false, onPro
                   onClick={() => setIsEditModalOpen(true)}
                   className="flex items-center bg-gray-100 hover:bg-gray-200 rounded-md px-3 py-1.5"
                 >
-                  <span className="mr-1">✏️</span> Edit Profile
+                  <span className="mr-1">✏️</span> Chỉnh sửa
                 </button>
               ) : (
                 <>

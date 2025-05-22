@@ -7,25 +7,26 @@ import { useState } from 'react';
 import axios from 'axios';
 
 export default function UserSuggestionCard({ user, onFollowToggle }) {
+  console.log('UserSuggestionCard', user);
   const [isFollowing, setIsFollowing] = useState(user?.isFollowing || false);
   const [loading, setLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [hovered, setHovered] = useState(false);
   // Handle follow/unfollow action
   const handleFollowToggle = async () => {
-    if (!user || !user.userId) return;
+    if (!user || !user.id) return;
     
     setLoading(true);
     try {
       // Call the follow API
-      await axios.post(`/api/proxy/follow/${user.userId}`);
+      await axios.post(`/api/proxy/follow/${user.id}`);
       
       // Update local state
       setIsFollowing(!isFollowing);
       
       // Notify parent component
       if (onFollowToggle) {
-        onFollowToggle(user.userId, !isFollowing);
+        onFollowToggle(user.id, !isFollowing);
       }
     } catch (error) {
       console.error('Error toggling follow status:', error);
@@ -60,7 +61,7 @@ export default function UserSuggestionCard({ user, onFollowToggle }) {
       </div>
         <div className="pt-12 pb-6 px-4">
         <div className="text-center mb-4">
-          <Link href={`/user/${user.userId}`} className="hover:underline">
+          <Link href={`/user/${user.id}`} className="hover:underline">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white">{user.fullName}</h3>
           </Link>
           

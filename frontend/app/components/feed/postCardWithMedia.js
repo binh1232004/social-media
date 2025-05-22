@@ -8,7 +8,6 @@ import useVote from "../../hooks/useVote";
 
 export default function PostCard({ post, onLike }) {
     const [showComments, setShowComments] = useState(false);
-    
     // Use our comments hook
     const {
         comments,
@@ -57,9 +56,8 @@ export default function PostCard({ post, onLike }) {
         return (
             <div className={`comment-thread ${comment.isOptimistic ? 'opacity-70' : ''}`}>
                 <div className="flex">
-                    <div className="w-8 h-8 rounded-full bg-gray-300 mr-2 flex-shrink-0">
-                        {/* If we had user avatars, we'd use them here */}
-                    </div>
+                    {/* <div className="w-8 h-8 rounded-full bg-gray-300 mr-2 flex-shrink-0">
+                    </div> */}
                     <div className="flex-1">
                         <div className={`bg-gray-100 rounded-2xl py-2 px-3 max-w-[95%] ${comment.isOptimistic ? 'border border-blue-200' : ''}`}>
                             <p className="font-semibold text-sm">{commentUser}</p>
@@ -119,7 +117,6 @@ export default function PostCard({ post, onLike }) {
         const newShowComments = await toggleComments(showComments);
         setShowComments(newShowComments);
     };
-    
     return (
         <div className="bg-white rounded-lg shadow p-5">
                       
@@ -157,7 +154,7 @@ export default function PostCard({ post, onLike }) {
                 </Link>
                 
                 {/* Display tags if available */}
-                {post.tags && post.tags.length > 0 && (
+                {/* {post.tags && post.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3">
                         {post.tags.map((tag, index) => (
                             <span 
@@ -168,7 +165,7 @@ export default function PostCard({ post, onLike }) {
                             </span>
                         ))}
                     </div>
-                )}
+                )} */}
                   
                 {/* Handle media array format with improved debugging */}
                 {post.media && post.media.length > 0 && (
@@ -311,9 +308,7 @@ export default function PostCard({ post, onLike }) {
                     <span className="mr-2">💬</span> Bình luận
                     {isLoadingComments && <span className="ml-1 animate-pulse">...</span>}
                 </button>
-                <button className="flex-1 flex items-center justify-center py-2 hover:bg-gray-100 rounded-lg">
-                    <span className="mr-2">↗️</span> Chia sẻ
-                </button>
+                
             </div>
             
             {/* Comments section */}

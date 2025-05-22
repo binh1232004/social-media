@@ -42,9 +42,7 @@ export async function GET(request, { params }) {
 
     // Make request to the backend API
     // Handle 'me' endpoint separately
-    const endpoint = id === 'me' 
-      ? `${backendUrl}/api/User/me` 
-      : `${backendUrl}/api/User/${id}`;
+    const endpoint =  `${backendUrl}/api/Users/${id}`;
       
     const response = await axios.get(endpoint, {
       headers: {
@@ -121,20 +119,31 @@ export async function PUT(request, { params }) {
         { error: 'Backend URL not configured' }, 
         { status: 500 }
       );
-    }
-
-    // Handle multipart/form-data
+    }    // Handle form data from the request
     const formData = await request.formData();
     
+    // Create a JSON object that matches the expected API format
+    const updateData = {};
+    
+    // Extract and map fields according to API documentation
+    if (formData.get('fullName')) updateData.fullName = formData.get('fullName');
+    if (formData.get('intro')) updateData.intro = formData.get('intro');
+    if (formData.get('gender')) updateData.gender = formData.get('gender');
+    if (formData.get('birthday')) updateData.birthday = formData.get('birthday');
+    if (formData.get('image')) updateData.image = formData.get('image');
+    
     // Make request to the backend API
-    const endpoint = `${backendUrl}/api/User/${id}`;
+    const endpoint = `${backendUrl}/api/Users/${id}`;
+    
+    console.log('Updating user profile with data:', updateData);
+    
     const response = await axios.put(
       endpoint, 
-      formData,
+      updateData,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
-          // Content-Type will be automatically set to 'multipart/form-data' by axios
+          'Content-Type': 'application/json',
         },
         httpsAgent
       }

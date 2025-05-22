@@ -18,7 +18,7 @@ export default function ProfilePage() {
     refreshProfile 
   } = useUserProfile(userId);
   const { posts: userPosts, loading: postsLoading } = useUserPosts(profileData?.userId);
-  
+  console.log("user posts", userPosts);  
   const [activeTab, setActiveTab] = useState("posts");
   const [toast, setToast] = useState(null);
   // Show loading state while data is being fetched

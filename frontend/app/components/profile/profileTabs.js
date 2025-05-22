@@ -3,10 +3,10 @@ import React from "react";
 
 export default function ProfileTabs({ activeTab, setActiveTab }) {
   const tabs = [
-    { id: "posts", label: "Posts" },
-    { id: "about", label: "About" },
-    { id: "friends", label: "Friends" },
-    { id: "photos", label: "Photos" }
+    { id: "posts", label: "Bài đăng" },
+    // { id: "about", label: "About" },
+    // { id: "friends", label: "Friends" },
+    // { id: "photos", label: "Photos" }
   ];
   
   return (

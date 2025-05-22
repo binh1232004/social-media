@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import usePost from "../../hooks/usePost";
-import PostCard from "../../components/feed/postCard";
+import PostCard from "../../components/feed/postCardWithMedia";
 import Link from "next/link";
 
 /**

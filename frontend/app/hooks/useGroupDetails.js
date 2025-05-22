@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { showToast } from '../utils/toast';
+import { getUserInfo } from '../utils/auth';
 
 /**
  * Custom hook for fetching and managing group details
@@ -212,14 +213,33 @@ export function useGroupDetails({ groupId, onSuccess, onError } = {}) {
    * @param {string|number} id - Optional: GroupId to join (defaults to current groupId)
    * @returns {Promise<Object>} Join response or error
    */
-  const joinGroup = useCallback(async (id = groupIdRef.current) => {
+  const joinPublicGroup = useCallback(async (id = groupIdRef.current) => {
     if (!id) {
       const errorMessage = 'Group ID is required to join a group';
       setError(errorMessage);
       showToast(errorMessage, 'error');
       return null;
     }
-
+    const userInfo = getUserInfo();
+    const requestBody = {
+      userId: userInfo.userId,
+      approve: true,
+      groupId: id
+    };
+    const response = await fetch(`/api/proxy/group-members/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+    if (!response.ok) {
+      const errorMessage = `Failed to fetch group details (${response.status})`;
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
+      return null;
+    }
+    console.log('Group details fetched successfully for join:', response);
     setIsJoining(true);
     
     try {
@@ -293,7 +313,7 @@ export function useGroupDetails({ groupId, onSuccess, onError } = {}) {
     error,
     isJoining,
     fetchGroupDetails,
-    joinGroup
+    joinPublicGroup
   };
 }
 

@@ -44,7 +44,7 @@ export async function GET(request) {
 
     // Make request to the backend API
     const response = await axios.get(
-      `${backendUrl}/api/User/search`,
+      `${backendUrl}/api/Search/users`,
       {
         params: {
           query,

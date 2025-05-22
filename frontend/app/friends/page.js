@@ -14,12 +14,12 @@ export default function FriendsPage() {
   const [existingFriends, setExistingFriends] = useState([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
   const [friendError, setFriendError] = useState(null);
-  const [activeTab, setActiveTab] = useState('suggestions'); // 'suggestions' or 'search'
+  const [activeTab, setActiveTab] = useState('search'); // 'suggestions' or 'search'
   
   // Get user suggestions from our hook
   const { 
     suggestions, 
-    loading: suggestionsLoading, 
+  loading: suggestionsLoading, 
     error: suggestionsError,
     refreshSuggestions 
   } = useUserSuggestions(10);
@@ -116,7 +116,7 @@ export default function FriendsPage() {
         
         {/* Tabs */}
         <div className="flex border-b border-gray-200 mb-6">
-          <button
+          {/* <button
             onClick={() => setActiveTab('suggestions')}
             className={`py-2 px-4 font-medium ${
               activeTab === 'suggestions'
@@ -125,7 +125,7 @@ export default function FriendsPage() {
             }`}
           >
             Suggestions
-          </button>
+          </button> */}
           <button
             onClick={() => {
               setActiveTab('search');
@@ -142,7 +142,7 @@ export default function FriendsPage() {
         </div>
         
         {/* User Suggestions Section - only show when activeTab is 'suggestions' */}
-        {activeTab === 'suggestions' && (
+        {/* {activeTab === 'suggestions' && (
           <section className="mb-12">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">People You May Know</h2>
@@ -191,7 +191,7 @@ export default function FriendsPage() {
             </div>
           )}
           </section>
-        )}
+        )} */}
 
         {/* Search Results Section - only show when activeTab is 'search' */}
         {activeTab === 'search' && (
