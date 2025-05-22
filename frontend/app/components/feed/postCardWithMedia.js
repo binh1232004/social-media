@@ -23,7 +23,7 @@ export default function PostCard({ post, onLike }) {
         formatRelativeTime
     } = useComment({ 
         postId: post.id,
-        initialComments: post.comments || []
+        initialComments: []
     });
     
     // Use our vote hook
@@ -287,7 +287,8 @@ export default function PostCard({ post, onLike }) {
                 </div>
                 <div>
                     <span className="inline-block mr-1">💬</span>
-                    {comments.length} {comments.length === 1 ? 'bình luận' : 'bình luận'}
+                    {/* {comments.length} {comments.length === 1 ? 'bình luận' : 'bình luận'} */}
+                    {post.comments} {post.comments === 1 ? 'bình luận' : 'bình luận'}   
                 </div>
             </div>
             

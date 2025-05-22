@@ -17,9 +17,6 @@ export default function HomePage() {
         loadMorePosts, 
         refreshPosts 
     } = useUserPosts(userId, 10); // Reduced to 10 posts per page for better performance
-    useEffect(() => {
-        console.log("posts", posts);
-    }, [posts]);
     // Create an observer for infinite scrolling
     const observer = useRef();
     const lastPostElementRef = useCallback(node => {

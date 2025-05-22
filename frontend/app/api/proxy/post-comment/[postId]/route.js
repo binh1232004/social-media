@@ -110,3 +110,95 @@ export async function POST(request, { params }) {
         );
     }
 }
+
+/**
+ * API proxy for retrieving comments for a post
+ *
+ * This endpoint proxies requests to the backend API for retrieving comments
+ * for a specific post. It handles authentication, pagination, and nested structure.
+ */
+export async function GET(request, { params }) {
+    const { postId } = params;
+    const authToken = getTokenFromServerCookies();
+
+    if (!authToken) {
+        return NextResponse.json(
+            { error: "You must be logged in to view comments" },
+            { status: 401 }
+        );
+    }
+
+    try {
+        // Get query parameters
+        const url = new URL(request.url);
+        const skip = url.searchParams.get("skip") || 0;
+        const take = url.searchParams.get("take") || 10;
+        const nested = url.searchParams.get("nested") === "true";
+
+        // Build API URL with query parameters
+        const apiUrl = `${process.env.NEXT_PUBLIC_FQDN_BACKEND}/api/Comments/post/${postId}`;
+        const queryParams = new URLSearchParams({
+            skip,
+            take,
+            nested,
+        }).toString();
+
+        const fullUrl = `${apiUrl}?${queryParams}`;
+        
+        console.log('Fetching comments from backend:', fullUrl);
+
+        try {
+            const response = await axios.get(fullUrl, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                    "Content-Type": "application/json",
+                },
+                httpsAgent, // Use the agent that ignores certificate validation
+            });
+
+            console.log('Comment API response status:', response.status);
+            
+            // Log the structure of the response
+            if (response.data) {
+                const isArray = Array.isArray(response.data);
+                const itemCount = isArray ? response.data.length : 'N/A';
+                console.log('Comment response structure:', {
+                    isArray,
+                    itemCount,
+                    firstItemSample: isArray && response.data.length > 0 ? 
+                        JSON.stringify(response.data[0]).substring(0, 100) + '...' : 'N/A'
+                });
+            }
+
+            // Return successful response with comments data
+            return NextResponse.json(response.data, { status: 200 });
+        } catch (axiosError) {
+            console.error("Axios error fetching comments:", axiosError);
+
+            if (axiosError.response) {
+                // The server responded with a status code outside of 2xx range
+                const status = axiosError.response.status;
+                const errorMessage =
+                    axiosError.response.data?.message ||
+                    "Error from backend service";
+                return NextResponse.json({ error: errorMessage }, { status });
+            }
+
+            // Network error or request cancelled
+            return NextResponse.json(
+                { error: "Failed to connect to backend service" },
+                { status: 502 }
+            );
+        }
+    } catch (error) {
+        console.error("Error fetching comments:", error);
+
+        // Generic catch-all error handler
+        return NextResponse.json(
+            {
+                error: "An unexpected error occurred while retrieving comments",
+            },
+            { status: 500 }
+        );
+    }
+}

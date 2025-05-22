@@ -314,32 +314,24 @@ export function useComment({ postId, initialComments = [] }) {
       console.error("Error formatting date:", e);
       return "Unknown time";
     }
-  };
-
-  /**
+  };  /**
    * Load comments for a post
    */
   const loadComments = async () => {
     setIsLoadingComments(true);
     
     try {
-      // In a real application, you'd fetch comments from your API
-      const response = await fetch(`/api/proxy/post-comments/${postId}`);
-      
+      // Fetch comments from our API endpoint with nested structure
+      const response = await fetch(`/api/proxy/post-comment/${postId}?nested=true`);
       if (response.ok) {
         const data = await response.json();
-        setComments(data.map(comment => ({
-          id: comment.commentId,
-          userId: comment.userId,
-          user: comment.userName || "User", // API would ideally return userName
-          content: comment.content,
-          postedAt: comment.postedAt,
-          replies: [] // Or process nested replies if available
-        })));
+        console.log('Comments loaded:', data);   
+        // Process and format comments from API
+        const formattedComments = data.map(comment => formatCommentForDisplay(comment));
+        
+        setComments(formattedComments);
       } else {
         showToast('Failed to load comments', 'error');
-        // You might want to use mock data if API is not available during development
-        // setComments(mockComments);
       }
     } catch (error) {
       console.error('Error loading comments:', error);
@@ -348,13 +340,32 @@ export function useComment({ postId, initialComments = [] }) {
       setIsLoadingComments(false);
     }
   };
+  
+  /**
+   * Helper function to recursively format comments and their replies
+   * @param {Object} comment - Comment from API
+   * @returns {Object} Formatted comment for UI display
+   */
+  const formatCommentForDisplay = (comment) => {
+    return {
+      id: comment.commentId,
+      userId: comment.userId,
+      user: comment.username || "User", 
+      content: comment.content,
+      postedAt: comment.postedAt,
+      time: formatRelativeTime(comment.postedAt),
+      // Process child comments recursively if they exist
+      replies: comment.childComments ? 
+        comment.childComments.map(childComment => formatCommentForDisplay(childComment)) : []
+    };
+  };
 
   /**
    * Toggle comments visibility
    */
   const toggleComments = async (currentVisibility) => {
     const newVisibility = !currentVisibility;
-    
+    console.log(currentVisibility, comments, isLoadingComments);
     // If showing comments and we don't have any yet, try to load them
     if (newVisibility && comments.length === 0 && !isLoadingComments) {
       loadComments();
