@@ -79,20 +79,6 @@ export default function GroupsPage() {
         return matchesSearch;
     }
   });
-  
-  useEffect(() => {
-    console.log("Filtered Groups:", filteredGroups);
-  }
-  , [filteredGroups]);
-  
-  useEffect(() => {
-    console.log("Filtered Groups:", filteredGroups);
-    console.log("Is Loading:", isLoading);
-  }, [filteredGroups, isLoading]);
-  useEffect(() => {
-    console.log("Filtered Groups:", filteredGroups);
-  }
-  , [filteredGroups]);
   return (
     <>
       {/* Groups Header */}
