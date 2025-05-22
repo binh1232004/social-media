@@ -56,13 +56,13 @@ export default function UserAvatar() {
               href="/profile" 
               className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700"
             >
-              Your Profile
+              Trang cá nhân
             </a>
             <button 
               onClick={handleLogout}
               className="w-full text-left block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-slate-700"
             >
-              Quit Account
+              Đăng xuất
             </button>
           </div>
         </div>
