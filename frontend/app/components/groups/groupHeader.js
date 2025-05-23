@@ -32,7 +32,7 @@ export default function GroupHeader({
             {/* Cover photo */}
             <div className="h-48 relative bg-gray-200">
                 <Image
-                    src={groupDetails.image || '/group.png'}
+                    src={groupDetails.image || '/group.jpg'}
                     alt={groupDetails.groupName}
                     fill
                     className="object-cover"

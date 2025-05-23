@@ -6,10 +6,9 @@ import { formatDistance } from 'date-fns';
 /**
  * Custom hook for fetching group posts
  * @param {string} groupId - The ID of the group
- * @param {boolean} isMember - Whether the current user is a member of the group
  * @returns {Object} Group posts data and functions
  */
-export function useGroupPosts(groupId, isMember = false) {
+export function useGroupPosts(groupId) {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -39,13 +38,12 @@ export function useGroupPosts(groupId, isMember = false) {
       // Add any other fields needed by PostCard
     }));
   };
-
   /**
    * Fetch posts for a specific group
    * @param {boolean} refresh - Whether to refresh and reset pagination
    */
   const fetchGroupPosts = useCallback(async (refresh = false) => {
-    if (!groupId || !isMember) return;
+    if (!groupId) return;
     
     // If refreshing, reset pagination
     if (refresh) {
@@ -94,11 +92,10 @@ export function useGroupPosts(groupId, isMember = false) {
     } catch (error) {
       console.error('Error fetching group posts:', error);
       setError(error.message);
-      showToast(error.message, 'error');
-    } finally {
+      showToast(error.message, 'error');    } finally {
       setIsLoading(false);
     }
-  }, [groupId, page, hasMore, isMember, pageSize]);
+  }, [groupId, page, hasMore, pageSize]);
 
   /**
    * Load more posts (pagination)
@@ -123,17 +120,16 @@ export function useGroupPosts(groupId, isMember = false) {
   const addPost = useCallback((newPost) => {
     setPosts(prevPosts => [newPost, ...prevPosts]);
   }, []);
-
-  // Initial fetch when groupId or isMember changes
+  // Initial fetch when groupId changes
   useEffect(() => {
-    if (groupId && isMember) {
-      // Reset everything when groupId or membership changes
+    if (groupId) {
+      // Reset everything when groupId changes
       setPosts([]);
       setPage(1);
       setHasMore(true);
       fetchGroupPosts(true);
     }
-  }, [groupId, isMember, fetchGroupPosts]);
+  }, [groupId, fetchGroupPosts]);
 
   return {
     posts,

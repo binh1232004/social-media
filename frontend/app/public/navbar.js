@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { socket } from "@/socket";
 import UserAvatar from "../components/UserAvatar";
 
 export default function NavBar() {
@@ -26,8 +25,8 @@ export default function NavBar() {
         };
     }, []);
 
+    // Socket.IO functionality removed
     const handleClickID = () => {
-        socket.emit("registerCurrentID", currentID);
         console.log(currentID);
     };
 

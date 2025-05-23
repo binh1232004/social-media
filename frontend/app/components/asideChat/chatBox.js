@@ -1,5 +1,4 @@
 "use client";
-import { socket } from "@/socket";
 import React, { useEffect, useState, useRef } from "react";
 
 export default function ChatBox({ onClose, name, targetId }) {
@@ -17,30 +16,12 @@ export default function ChatBox({ onClose, name, targetId }) {
         scrollToBottom();
     }, [messages]);
 
-    useEffect(() => {
-        // Register target ID
-        socket.emit("registerTargetID", targetId);
-
-        // Set up message listener
-        socket.on("receiveMsg", (data) => {
-            console.log("Received message:", data);
-            setMessages((prev) => [...prev, {
-                text: typeof data === 'object' ? data.text : data,
-                sender: data.from === socket.currentID ? "me" : "other",
-                type: data.type || 'text',
-                fileUrl: data.fileUrl
-            }]);
-        });
-
-        return () => {
-            socket.off("receiveMsg");
-        };
-    }, [targetId]);
-
+    // Chat functionality has been removed as we're no longer using Socket.IO
+    
     const handleSubmit = (e) => {
         e.preventDefault();
         if (message.trim()) {
-            socket.emit("chat", message);
+            // Add message to local state only (no Socket.IO)
             setMessages((prev) => [...prev, {
                 text: message,
                 sender: "me",

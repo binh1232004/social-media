@@ -21,10 +21,6 @@ export default function GroupPage() {
     const [activeTab, setActiveTab] = useState("discussion");
     const [isMember, setIsMember] = useState(false);
     const [canViewContent, setCanViewContent] = useState(false);
-    const [currentUserId, setCurrentUserId] = useState("placeholder-current-user-id"); // Placeholder for current user ID
-    const [isAdmin, setIsAdmin] = useState(false); // Add isAdmin state
-
-    // Use our custom hook to fetch group posts
     const {
         posts,
         isLoading: postsLoading,
@@ -32,7 +28,7 @@ export default function GroupPage() {
         hasMore,
         loadMorePosts,
         refreshPosts
-    } = useGroupPosts(groupId, isMember);
+    } = useGroupPosts(groupId);
     console.log("Posts:", posts); 
     // Use our custom hook to fetch group details
     const {
@@ -86,17 +82,7 @@ export default function GroupPage() {
         fetchToIsMember();
     }, [groupId]);
     
-    // Format the creation date for display
-    const formatCreationDate = (dateString) => {
-        try {
-            return formatDistance(new Date(dateString), new Date(), {
-                addSuffix: true,
-            });
-        } catch (e) {
-            console.error("Error formatting date:", e);
-            return "Unknown date";
-        }
-    };
+ 
     
     // Function to handle joining a public group
     const handleJoinPublicGroup = async () => {

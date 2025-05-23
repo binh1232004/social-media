@@ -1,5 +1,4 @@
 "use client";
-import { socket } from "@/socket";
 import React from "react";
 import ChatBox from "./chatBox";
 
