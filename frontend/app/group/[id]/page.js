@@ -33,7 +33,7 @@ export default function GroupPage() {
         loadMorePosts,
         refreshPosts
     } = useGroupPosts(groupId, isMember);
-    
+    console.log("Posts:", posts); 
     // Use our custom hook to fetch group details
     const {
         groupDetails,

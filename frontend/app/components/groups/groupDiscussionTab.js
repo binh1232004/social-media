@@ -13,8 +13,44 @@ export default function GroupDiscussionTab({
     refreshPosts,
     groupId
 }) {
-    // Simplified posts handling - no infinite scrolling
-    const formattedPosts = Array.isArray(posts) ? posts : [];// Custom handler for adding new posts
+    // Format posts to ensure media properties match what PostCard expects
+    const formattedPosts = Array.isArray(posts) ? posts.map(post => {
+        // Create a new post object with the correct structure
+        const formattedPost = { ...post };
+        
+        // Format media items if they exist
+        if (post.media && Array.isArray(post.media)) {
+            formattedPost.media = post.media.map(item => {
+                // Make sure each media item has mediaType and mediaUrl properties
+                if (!item.mediaType && item.type) {
+                    // If type exists but mediaType doesn't, copy it
+                    return { 
+                        mediaType: item.type,
+                        mediaUrl: item.url || item.mediaUrl || '',
+                    };
+                } else if (!item.mediaUrl && item.url) {
+                    // If url exists but mediaUrl doesn't, copy it
+                    return {
+                        mediaType: item.mediaType || item.type || 'unknown',
+                        mediaUrl: item.url,
+                    };
+                }
+                // Return the item if it already has the correct properties
+                return item;
+            });
+        } else if (post.image) {
+            // Convert legacy image format to media array
+            formattedPost.media = [{
+                mediaType: 'image',
+                mediaUrl: post.image
+            }];
+        }
+        
+        return formattedPost;
+    }) : [];
+    
+    console.log("Formatted posts:", formattedPosts);
+    
     const handleAddNewPost = (postData) => {
         if (refreshPosts) {
             refreshPosts();
