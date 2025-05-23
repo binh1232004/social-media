@@ -3,9 +3,8 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useGroupDetails } from "../../hooks/useGroupDetails";
 import { useGroupPosts } from "../../hooks/useGroupPosts";
+import { usePendingGroupPosts } from "../../hooks/usePendingGroupPosts"; // Import the real data hook
 import { showToast } from "../../utils/toast";
-// Import the mock data directly, and the specific getter if needed elsewhere
-import { mockPendingPosts, getMockPendingPostsByGroupId } from "../../utils/mockPendingPosts"; 
 
 // Import our component files
 import GroupHeader from "../../components/groups/groupHeader";
@@ -22,8 +21,8 @@ export default function GroupPage() {
     const [activeTab, setActiveTab] = useState("discussion");
     const [isMember, setIsMember] = useState(false);
     const [canViewContent, setCanViewContent] = useState(false);
-    const [pendingPosts, setPendingPosts] = useState([]);
     const [currentUserId, setCurrentUserId] = useState("placeholder-current-user-id"); // Placeholder for current user ID
+    const [isAdmin, setIsAdmin] = useState(false); // Add isAdmin state
 
     // Use our custom hook to fetch group posts
     const {
@@ -57,22 +56,17 @@ export default function GroupPage() {
         },
     });
     
-    useEffect(() => {
-        // Reset pending posts when group ID changes
-        // and fetch mock pending posts
-        console.log("Fetching mock pending posts for groupId:", groupId);
-        // Directly use some mock data for testing, bypassing groupId filter for now
-        // This will ensure GroupPendingPostsTab always gets some data if mockPendingPosts is not empty.
-        setPendingPosts(mockPendingPosts.slice(0, 2)); // Use the first 2 mock posts for example
-        
-        // Original logic (can be restored later):
-        // if (groupId) {
-        //     const mockData = getMockPendingPostsByGroupId(groupId);
-        //     setPendingPosts(mockData);
-        // } else {
-        //     setPendingPosts([]);
-        // }
-    }, [groupId]);
+    // Use the real hook for pending posts
+    const {
+        pendingPosts,
+        isLoading: pendingPostsLoading,
+        error: pendingPostsError,
+        hasMore: hasMorePending,
+        loadMorePendingPosts,
+        refreshPendingPosts,
+        removePostFromList
+    } = usePendingGroupPosts(groupId);
+
     useEffect(() => {
         const fetchToIsMember = async () => {
             try{
@@ -124,22 +118,39 @@ export default function GroupPage() {
             showToast("Không thể tham gia nhóm, vui lòng thử lại", "error");
         }
     };
-      // Function to handle joining a private group (for future implementation)
+    
+    // Function to handle joining a private group (for future implementation)
     const handleJoinPrivateGroup = () => {
         showToast("Tính năng tham gia nhóm riêng tư sẽ sớm ra mắt", "info");
     };
-    
-    // Function to handle post approval
-    const handlePostApproval = (postId, isApproved) => {
-        // Will implement API call here
-        showToast(`Post ${postId} ${isApproved ? 'approved' : 'denied'}`, 'success');
-        // Optionally, refetch or update pendingPosts state here
-        if (groupId) {
-            const mockData = getMockPendingPostsByGroupId(groupId);
-            // If actually approving/denying, you'd filter out the approved/denied post
-            // For now, just re-filtering to simulate a list update.
-            // In a real scenario, you'd remove the post from pendingPosts.
-            setPendingPosts(mockData.filter(p => p.id !== postId));
+      // Function to handle post approval
+    const handlePostApproval = async (postId, isApproved) => {
+        try {
+            // Show loading toast
+            showToast(`Đang ${isApproved ? 'chấp nhận' : 'từ chối'} bài viết...`, 'info');
+            
+            // Call our proxy API endpoint
+            const response = await fetch('/api/proxy/group-posts/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    groupId,
+                    postId,
+                    approve: isApproved
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Failed to ${isApproved ? 'approve' : 'reject'} post`);
+            }
+            
+            // Success! Update UI and show success toast
+            showToast(`Bài viết đã được ${isApproved ? 'chấp nhận' : 'từ chối'}`, 'success');
+            removePostFromList(postId); // Remove from UI list using the hook function
+        } catch (error) {
+            console.error(`Error ${isApproved ? 'approving' : 'denying'} post:`, error);
+            showToast(`Không thể ${isApproved ? 'chấp nhận' : 'từ chối'} bài viết, vui lòng thử lại`, "error");
         }
     };
 
@@ -168,13 +179,9 @@ export default function GroupPage() {
         );
     }
 
-    // Attempt to get admin IDs from groupDetails
-    // This assumes groupDetails.admins is an array of objects like { id: 'userId', ... }
-    // Adjust if your groupDetails structure for admins is different (e.g., groupDetails.adminIds)
-    const groupAdmins = groupDetails?.admins?.map(admin => admin.id) || groupDetails?.admin_ids || [];
-
     return (
-        <>            {/* Group Header Component */}
+        <>
+            {/* Group Header Component */}
             <GroupHeader 
                 groupDetails={groupDetails}
                 isMember={isMember}
@@ -183,7 +190,8 @@ export default function GroupPage() {
                 handleJoinPrivateGroup={handleJoinPrivateGroup}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
-            />            {/* Tab Content */}
+            />
+            {/* Tab Content */}
             {!canViewContent && groupDetails.visibility.toLowerCase() === "private" ? (
                 <div className="bg-white rounded-lg shadow p-8 mt-4 text-center">
                     <div className="text-gray-500 mb-4">
@@ -222,13 +230,16 @@ export default function GroupPage() {
                         <GroupAboutTab groupDetails={groupDetails} />
                     )}
                     
-                    {/* Pending Posts Tab */}
-                    {activeTab === "pendingPosts" && (
+                    {/* Pending Posts Tab - Only show if user is admin */}
+                    {activeTab === "pendingPosts"  && (
                         <GroupPendingPostsTab 
-                            pendingPosts={pendingPosts} 
+                            pendingPosts={pendingPosts}
                             handlePostApproval={handlePostApproval}
-                            currentUserId={currentUserId} // Pass currentUserId
-                            groupAdmins={groupAdmins} // Pass groupAdmins
+                            isLoading={pendingPostsLoading}
+                            error={pendingPostsError}
+                            hasMore={hasMorePending}
+                            loadMorePosts={loadMorePendingPosts}
+                            refreshPosts={refreshPendingPosts}
                         />
                     )}
                     

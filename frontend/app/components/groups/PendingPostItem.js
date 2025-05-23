@@ -1,4 +1,3 @@
-
 "use client";
 import Image from "next/image";
 import { formatDistanceToNowStrict } from 'date-fns';
@@ -15,13 +14,15 @@ export default function PendingPostItem({ post, onApprove, onDeny }) {
     return (
         <div className="border rounded-lg p-4 bg-white shadow">
             <div className="flex items-center mb-3">
-                <Image
-                    src={post.user.avatarUrl || '/avatar.png'} // Fallback to a default avatar
-                    alt={post.user.name}
-                    width={40}
-                    height={40}
-                    className="rounded-full mr-3"
-                />
+                <div className="w-10 h-10 rounded-full mr-3 overflow-hidden flex-shrink-0"> {/* Added container with fixed size and overflow-hidden */}
+                    <Image
+                        src={post.user.avatarUrl || '/avatar.png'} // Fallback to a default avatar
+                        alt={post.user.name}
+                        width={40} // Width of the image
+                        height={40} // Height of the image
+                        className="object-cover w-full h-full" // Ensure image covers the container
+                    />
+                </div>
                 <div>
                     <p className="font-semibold">{post.user.name}</p>
                     <p className="text-sm text-gray-500">
