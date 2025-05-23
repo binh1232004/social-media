@@ -26,7 +26,7 @@ export default function GroupHeader({
             return "Unknown date";
         }
     };
-
+    
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
             {/* Cover photo */}

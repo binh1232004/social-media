@@ -64,17 +64,115 @@ export async function POST(request) {
           })
         }
       );
-      
-      // Successful response
+        // Successful response
       console.log("Backend login response status:", response.status);
       console.log("Backend login response data:", response.data);
-       // Enhanced logging of the response
-    console.log("======== BACKEND RESPONSE ========");
-    console.log("Status:", response.status);
-    console.log("Status Text:", response.statusText);
-    console.log("Headers:", response.headers);
-    console.log("Data:", JSON.stringify(response.data, null, 2));
-    console.log("=================================");
+      // Enhanced logging of the response
+      console.log("======== BACKEND RESPONSE ========");
+      console.log("Status:", response.status);
+      console.log("Status Text:", response.statusText);
+      console.log("Headers:", response.headers);
+      console.log("Data:", JSON.stringify(response.data, null, 2));
+      console.log("=================================");
+      
+      // Extract token from the response
+      const token = response.data.token || 
+                   response.data.accessToken || 
+                   response.data.access_token || 
+                   (response.data.data && (
+                     response.data.data.token || 
+                     response.data.data.accessToken || 
+                     response.data.data.access_token
+                   ));
+                     if (token) {
+        // Extract user information from the token if possible
+        let userInfo = null;
+        try {
+          // JWT tokens have three parts: header.payload.signature
+          const parts = token.split('.');
+          if (parts.length === 3) {
+            // The payload is the second part and is base64 encoded
+            const base64Payload = parts[1];
+            // Replace URL-safe chars and add padding if needed
+            const base64 = base64Payload.replace(/-/g, '+').replace(/_/g, '/');
+            // Decode and parse as JSON
+            const payload = JSON.parse(atob(base64));
+            
+            // Create user info object
+            userInfo = {
+              userId: payload.user_id || payload.userId || payload.sub,
+              profileImage: payload.image || payload.profileImage || payload.picture,
+              name: payload.name || payload.full_name || payload.username,
+              email: payload.email,
+              exp: payload.exp ? new Date(payload.exp * 1000).toLocaleString() : null,
+            };
+            
+            console.log('Extracted user info from token:', userInfo);
+          }
+        } catch (e) {
+          console.error('Error extracting user info from JWT token:', e);
+        }
+        
+        // Create a new response
+        const nextResponse = NextResponse.json({
+          ...response.data,
+          userInfo // Include parsed user info in the response
+        }, { status: response.status });
+        
+        // Set auth token cookie from the server side (more secure)
+        // Try to decode token to get expiration
+        let expiryDate;
+        try {
+          // JWT tokens have three parts: header.payload.signature
+          const parts = token.split('.');
+          if (parts.length === 3) {
+            // The payload is the second part and is base64 encoded
+            const base64Payload = parts[1];
+            // Replace URL-safe chars and add padding if needed
+            const base64 = base64Payload.replace(/-/g, '+').replace(/_/g, '/');
+            // Decode and parse as JSON
+            const payload = JSON.parse(atob(base64));
+            
+            if (payload.exp) {
+              // exp is in seconds since epoch, convert to milliseconds for Date
+              expiryDate = new Date(payload.exp * 1000);
+              console.log(`Token will expire on: ${expiryDate.toLocaleString()}`);
+            }
+          }
+        } catch (e) {
+          console.error('Error decoding JWT token:', e);
+        }
+        
+        // If no expiration found in token, default to 1 day
+        if (!expiryDate) {
+          expiryDate = new Date();
+          expiryDate.setDate(expiryDate.getDate() + 1);
+          console.log('No expiration found in token, using 1-day default');
+        }
+        
+        // Set secure cookie options
+        const cookieOptions = {
+          expires: expiryDate,
+          path: '/',
+          sameSite: 'lax', // Use 'strict' for production
+          httpOnly: true, // Makes cookie inaccessible to client-side JavaScript
+          secure: process.env.NODE_ENV === 'production' // Only use HTTPS in production
+        };
+        
+        console.log("Setting auth cookie with options:", cookieOptions);
+        
+        // Set the HTTP-only secure cookie with the token
+        nextResponse.cookies.set('authToken', token, cookieOptions);
+        
+        // Set a non-HttpOnly cookie for client-side auth check
+        nextResponse.cookies.set('authToken_exists', 'true', {
+          ...cookieOptions,
+          httpOnly: false
+        });
+        
+        return nextResponse;
+      }
+      
       return NextResponse.json(response.data, { status: response.status });
       
     } catch (error) {

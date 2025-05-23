@@ -41,14 +41,14 @@ export default function useSignIn() {
           };
           
           console.log('Submitting login data:', loginData);
-          
-          // Make the API request
+            // Make the API request
           const response = await fetch('/api/proxy/login', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json'
               },
-              body: JSON.stringify(loginData)
+              body: JSON.stringify(loginData),
+              credentials: 'include' // Important for cookies to be sent/received
           });
           
           const data = await response.json();
@@ -61,17 +61,27 @@ export default function useSignIn() {
               // Look for token in various locations based on your API response
               const token = data.token || data.accessToken || data.access_token || 
                            (data.data && (data.data.token || data.data.accessToken || data.data.access_token));
-              
-              if (token) {
-                  // Save token
-                  const tokenInfo = setAuthToken(token);
-                  console.log('Token saved, expires:', tokenInfo.expiryDate);
+                if (token) {
+                  // The token is already saved in HTTP-only cookies by the backend
+                  console.log('Login successful with token');
                   
-                  // Display success message
-                  setError('');
+                  // Store user information in localStorage if available in the response
+                  if (data.userInfo) {
+                      try {
+                          localStorage.setItem('userInfo', JSON.stringify(data.userInfo));
+                          console.log('User info cached in localStorage');
+                      } catch (e) {
+                          console.error('Error storing user info:', e);
+                      }
+                  }
                   
-                  // Redirect to home page
-                  window.location.href = '/home';
+                  setError('Đăng nhập thành công!');
+                  
+                  // Wait briefly to show success message
+                  setTimeout(() => {
+                      // Redirect to home page
+                      window.location.href = '/home';
+                  }, 1000);
               } else {
                   console.warn('Login successful but no token received', data);
                   setError('Đăng nhập thành công nhưng không nhận được token.');

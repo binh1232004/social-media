@@ -81,6 +81,17 @@ export function getAuthToken() {
     }
   }
   
+  // If token not found in document.cookie (it might be HTTP-only)
+  // check for the existence marker
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === `${TOKEN_NAME}_exists` && value === 'true') {
+      console.log('Auth token exists as HTTP-only cookie');
+      // Return a placeholder since we can't access the actual HTTP-only cookie
+      return 'http-only-token';
+    }
+  }
+  
   return null;
 }
 
@@ -128,23 +139,53 @@ export function isTokenExpired(token) {
  */
 export function getUserInfo() {
   // Check if we have authentication
-  if (!isAuthenticated()) return null;
+  if (!isAuthenticated()) {
+    console.log('Not authenticated, returning null from getUserInfo');
+    return null;
+  }
   
   const token = getAuthToken();
-  if (!token) return null;
+  if (!token) {
+    console.log('No token found, returning null from getUserInfo');
+    return null;
+  }
+  
+  // If we have the special HTTP-only placeholder, check if we can get user info from localStorage
+  if (token === 'http-only-token') {
+    try {
+      const cachedUserInfo = localStorage.getItem('userInfo');
+      if (cachedUserInfo) {
+        return JSON.parse(cachedUserInfo);
+      }
+      console.log('HTTP-only token detected but no cached user info');
+    } catch (e) {
+      console.error('Error reading cached user info:', e);
+    }
+  }
   
   const decodedToken = decodeJwt(token);
-  if (!decodedToken) return null;
+  if (!decodedToken) {
+    console.log('Could not decode token, returning null from getUserInfo');
+    return null;
+  }
   
-  
-  return {
-    userId: decodedToken.user_id,
-    profileImage: decodedToken.image,
-    name: decodedToken.name || decodedToken.full_name,
+  const userInfo = {
+    userId: decodedToken.user_id || decodedToken.userId || decodedToken.sub,
+    profileImage: decodedToken.image || decodedToken.profileImage || decodedToken.picture,
+    name: decodedToken.name || decodedToken.full_name || decodedToken.username,
     email: decodedToken.email,
     exp: decodedToken.exp ? new Date(decodedToken.exp * 1000).toLocaleString() : null,
     // Add any other properties from your token here
   };
+  
+  // Cache the user info for HTTP-only cookie scenarios
+  try {
+    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+  } catch (e) {
+    console.error('Error caching user info:', e);
+  }
+  
+  return userInfo;
 }
 
 /**
@@ -162,7 +203,7 @@ export function isAuthenticated() {
   
   for (const cookie of cookies) {
     const [name, value] = cookie.trim().split('=');
-    if (name === `${TOKEN_NAME}_exists`) {
+    if (name === `${TOKEN_NAME}_exists` && value === 'true') {
       existsMarkerFound = true;
       break;
     }
@@ -172,18 +213,34 @@ export function isAuthenticated() {
     return false;
   }
   
-  // Then verify the actual token from cookies
-  const token = getAuthToken();
-  return !!token && !isTokenExpired(token);
+  // If we have the existence marker, we consider the user authenticated
+  // since the actual token is in an HTTP-only cookie managed by the browser
+  return true;
 }
 
 /**
  * Logs the user out by removing the token and redirecting
  * @param {string} [redirectUrl='/signin'] - URL to redirect to after logout
  */
-export function logout(redirectUrl = '/signin') {
+export async function logout(redirectUrl = '/signin') {
   try {
-    // First remove the token
+    // First try to clear HTTP-only cookies via API
+    try {
+      const response = await fetch('/api/proxy/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        console.log('Server-side logout successful');
+      } else {
+        console.warn('Server-side logout failed, falling back to client-side cookie removal');
+      }
+    } catch (apiError) {
+      console.error('Error during API logout:', apiError);
+    }
+    
+    // Also remove client-side cookies as fallback
     removeAuthToken();
     
     console.log('Redirecting to:', redirectUrl);

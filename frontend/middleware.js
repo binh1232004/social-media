@@ -78,8 +78,10 @@ export function middleware(request) {
   
   // Get auth token from cookies that was set by our frontend
   const token = request.cookies.get('authToken')?.value;
+  const tokenExists = request.cookies.get('authToken_exists')?.value === 'true';
+  
   // Check token validity and expiration
-  const isValidToken = token && !isTokenExpired(token);
+  const isValidToken = (token && !isTokenExpired(token)) || (tokenExists && token);
   
   // Redirect root path to signin
   if (pathname === '/') {
@@ -98,10 +100,10 @@ export function middleware(request) {
     // Redirect to login if trying to access protected route without valid auth
   if (isProtectedRoute && !isValidToken) {
     // If token exists but is expired, clear it from cookies
-    if (token && isTokenExpired(token)) {
-      const response = NextResponse.redirect(new URL('/signin', request.url));
+    if (token && isTokenExpired(token)) {      const response = NextResponse.redirect(new URL('/signin', request.url));
       // Clear the expired token cookie
       response.cookies.delete('authToken');
+      response.cookies.delete('authToken_exists');
       return response;
     }
     return NextResponse.redirect(new URL('/signin', request.url));

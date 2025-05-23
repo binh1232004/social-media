@@ -2,12 +2,28 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import FeedSection from "../components/feed/feedSection";
 import useUserPosts from "../hooks/useUserPosts";
-import { getUserInfo } from "../utils/auth";
+import { getUserInfo, isAuthenticated } from "../utils/auth";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-    // Use the custom hook to fetch posts for the current user with infinite scrolling
+    const router = useRouter();
+    const [isLoading, setIsLoading] = useState(true);
+    
+    // Get user info safely with optional chaining
     const userInfo = getUserInfo();
-    const userId = userInfo.userId;
+    const userId = userInfo?.userId || null;
+    
+    // Check authentication on component mount
+    useEffect(() => {
+        if (!isAuthenticated() || !userId) {
+            console.log("User not authenticated or missing userId, redirecting to signin");
+            router.push("/signin");
+            return;
+        }
+        setIsLoading(false);
+    }, [router, userId]);
+    
+    // Use the custom hook to fetch posts for the current user with infinite scrolling
     const { 
         posts, 
         initialLoading, 
@@ -16,7 +32,8 @@ export default function HomePage() {
         hasMore, 
         loadMorePosts, 
         refreshPosts 
-    } = useUserPosts(userId, 10); // Reduced to 10 posts per page for better performance
+    } = useUserPosts(userId || 'guest', 10); // Fallback to 'guest' if userId is null
+    
     // Create an observer for infinite scrolling
     const observer = useRef();
     const lastPostElementRef = useCallback(node => {
@@ -31,6 +48,15 @@ export default function HomePage() {
         
         if (node) observer.current.observe(node);
     }, [loading, hasMore, loadMorePosts]);
+    
+    // Show loading state when checking authentication
+    if (isLoading || !userId) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
     
     // Format posts for the FeedSection component with detailed information
     const formattedPosts = posts.map((post, index) => ({
