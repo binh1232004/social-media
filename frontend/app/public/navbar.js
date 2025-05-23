@@ -34,7 +34,7 @@ export default function NavBar() {
     const toggleMobileMenu = () => {
         setMobileMenuOpen(!mobileMenuOpen);
     };
-    const navigationLinks = ['Trang chủ', 'Bạn bè', 'Nhóm'];
+    const navigationLinks = [{label: 'Trang chủ', link: 'home'}, {label:'Bạn bè', link:"friends"}, {label: 'Nhóm', link: 'groups'}]
     return (
         <nav className={`fixed w-full z-50 top-0 left-0 transition-all duration-300 ${
             isScrolled 
@@ -75,12 +75,12 @@ export default function NavBar() {
                     {navigationLinks.map((item) => (
                         <Link 
                             key={item} 
-                            href={`/${item.toLowerCase()}`}
+                            href={`/${item.link}`}
                             className={`relative font-medium hover:text-blue-500 transition-colors group ${
                                 isScrolled ? "text-gray-700 dark:text-gray-200" : "text-white dark:text-gray-200"
                             }`}
                         >
-                            {item}
+                            {item.label}
                             <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-blue-500 transition-all group-hover:w-full"></span>
                         </Link>
                     ))}
@@ -127,14 +127,14 @@ export default function NavBar() {
                         {navigationLinks.map((item) => (
                             <Link 
                                 key={item} 
-                                href={`/${item.toLowerCase()}`}
+                                href={`/${item.link}`}
                                 className={`block px-4 py-3 text-base font-medium border-b border-gray-200 dark:border-gray-700 ${
                                     isScrolled 
                                         ? "text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700" 
                                         : "text-white hover:bg-blue-800 dark:hover:bg-gray-700"
                                 }`}
                             >
-                                {item}
+                                {item.label}
                             </Link>
                         ))}
                     </div>
