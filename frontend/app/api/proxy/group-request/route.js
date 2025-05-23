@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import axios from "axios";
 import { cookies } from "next/headers";
 import https from "https";
-import { group } from "console";
 
 const TOKEN_NAME = "authToken";
 
@@ -45,7 +44,6 @@ export async function POST(request, { params }) {
             );
         }
 
-        // FIRST API CALL: Request to join a group
         const apiUrlRequest = `${process.env.NEXT_PUBLIC_FQDN_BACKEND}/api/group-members/request`;
         
         const responseRequest = await axios.post(
@@ -60,43 +58,16 @@ export async function POST(request, { params }) {
             }
         );
         
-        console.log("First API response:", responseRequest.data);
         
-        // SECOND API CALL: Auto-approve the join request
-        // Only proceed if first call succeeded
-        if (responseRequest.status === 200 || responseRequest.status === 201) {
-            const apiUrlApprove = `${process.env.NEXT_PUBLIC_FQDN_BACKEND}/api/group-members/${requestBody.groupId}/approve`;
-            
-            // Prepare data for approval request
-            const approveData = { 
-                userId: requestBody.userId,
-                approve: true  // Assuming we want to approve
-            };
-            
-            const responseApprove = await axios.post(
-                apiUrlApprove,  // Fixed variable name from apiUrlAccept to apiUrlApprove
-                approveData, 
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                    httpsAgent,
-                }
-            );
-            
-            console.log("Second API response:", responseApprove.data);
             
             // Return success with both responses
             return NextResponse.json({ 
                 success: true,
-                request: responseRequest.data,
-                approve: responseApprove.data
+                // request: responseRequest.data,
+                // approve: responseApprove.data
             }, { status: 200 });
-        }
         
         // If first call didn't return 200/201, return that response
-        return NextResponse.json(responseRequest.data, { status: responseRequest.status });
         
     } catch (error) {
         console.error("Error in group-members route:", error);

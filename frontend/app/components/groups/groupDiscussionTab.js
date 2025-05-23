@@ -1,0 +1,131 @@
+"use client";
+import React, { useRef, useCallback, useState } from "react";
+import FeedSection from "@/app/components/feed/feedSection";
+import PostCard from "@/app/components/feed/postCardWithMedia";
+import GroupCreatePost from "@/app/components/groups/groupCreatePost";
+import { showToast } from "@/app/utils/toast";
+
+export default function GroupDiscussionTab({ 
+    isMember, 
+    posts, 
+    setIsMember, 
+    loading, 
+    hasMore, 
+    loadMorePosts,
+    refreshPosts,
+    groupId
+}) {
+    // Create a ref for the last post element to implement infinite scrolling
+    const observer = useRef();
+    const lastPostElementRef = useCallback(node => {
+        if (loading) return;
+        if (observer.current) observer.current.disconnect();
+        
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                loadMorePosts();
+            }
+        });
+        
+        if (node) observer.current.observe(node);
+    }, [loading, hasMore, loadMorePosts]);
+    
+    // Format the posts to include the ref for the last element
+    const formattedPosts = Array.isArray(posts) ? posts.map((post, index) => ({
+        ...post,
+        ref: index === posts.length - 1 ? lastPostElementRef : null
+    })) : [];    // Custom handler for adding new posts
+    const handleAddNewPost = (postData) => {
+        if (refreshPosts) {
+            refreshPosts();
+        }
+    };
+    
+    return (
+        <div>
+            {isMember ? (
+                <>                    {/* GroupCreatePost component for members only */}
+                    <div className="mb-4">
+                        <GroupCreatePost 
+                            groupId={groupId}
+                            onPostCreated={handleAddNewPost} 
+                            refreshPosts={refreshPosts} 
+                        />
+                    </div>
+                    
+                    <div className="mt-4">
+                        {loading && formattedPosts.length === 0 ? (
+                            <div className="flex justify-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                            </div>
+                        ) : formattedPosts.length > 0 ? (
+                            <div className="space-y-6">
+                                {formattedPosts.map((post) => (
+                                    <div key={post.id} ref={post.ref || null}>
+                                        <PostCard
+                                            post={post}
+                                            onLike={() => {}} // This would need to be implemented
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-lg shadow p-8 text-center">
+                                <p className="text-gray-500">
+                                    No posts available in this group.
+                                </p>
+                                <p className="mt-2 text-gray-600">
+                                    Create a new post to get the discussion started!
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </>
+            ) : (
+                <div className="space-y-6 mt-3">
+                    {loading && formattedPosts.length === 0 ? (
+                        <div className="flex justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    ) : formattedPosts.length > 0 ? (
+                        formattedPosts.map((post) => (
+                            <div key={post.id} ref={post.ref || null}>
+                                <PostCard
+                                    key={post.id}
+                                    post={post}
+                                    onLike={() => {}} // No-op function since non-members can't like
+                                />
+                            </div>
+                        ))
+                    ) : (
+                        <div className="bg-white rounded-lg shadow p-8 text-center">
+                            <p className="text-gray-500">
+                                No posts available in this group.
+                            </p>
+                            <button
+                                onClick={() => setIsMember(true)}
+                                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+                            >
+                                Join Group to Post
+                            </button>
+                        </div>
+                    )}
+                    
+                    {/* Loading indicator for infinite scrolling */}
+                    {loading && formattedPosts.length > 0 && (
+                        <div className="flex justify-center py-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    )}
+                    
+                    {/* End of posts message */}
+                    {!hasMore && formattedPosts.length > 0 && (
+                        <div className="text-center py-4 text-gray-500">
+                            You reached the end of the posts
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}

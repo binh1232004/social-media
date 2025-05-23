@@ -1,0 +1,508 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import FeedSection from "../../components/feed/feedSection";
+import CreatePost from "../../components/feed/createPost";
+import PostCard from "@/app/components/feed/postCardWithMedia";
+import GroupReport from "../../components/groups/groupReport";
+import { useGroupDetails } from "../../hooks/useGroupDetails";
+import { showToast } from "../../utils/toast";
+import Image from "next/image";
+import { formatDistance } from 'date-fns';
+
+export default function GroupPage() {
+    const params = useParams();
+    const groupId = params.id;
+    // State variables
+    const [activeTab, setActiveTab] = useState("discussion");
+    const [isMember, setIsMember] = useState(false);
+    const [canViewContent, setCanViewContent] = useState(false);
+    const [posts, setPosts] = useState([]);
+    const [pendingPosts, setPendingPosts] = useState([]);
+    // Use our custom hook to fetch group details
+    const {
+        groupDetails,
+        isLoading,
+        error,
+        isJoining,
+        fetchGroupDetails,
+        joinPublicGroup,
+    } = useGroupDetails({
+        groupId,
+        onSuccess: (data) => {
+            console.log("Group details loaded successfully:", data);
+            // Determine if user can view content based on group visibility
+            setCanViewContent(
+                data.visibility.toLowerCase() === "public" || isMember
+            );
+        },
+        onError: (err) => {
+            showToast("Failed to load group details", "error");
+            console.error("Error loading group details:", err);
+        },
+    }); // Dummy data for testing - populate with API data when ready
+    useEffect(() => {
+        // Mock data for posts - this would come from the API in real implementation
+        setPosts([]);
+        setPendingPosts([]);
+
+        // Check if user is a member - would be determined from API in real implementation
+        // For now we'll just set to false by default
+        setIsMember(false);
+    }, [groupId]);
+    useEffect(() => {
+        const fetchToIsMember = async () => {
+            try{
+                const request = await fetch(`/api/proxy/group-user/${groupId}`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                const data = await request.json();
+                console.log("User membership status:", data);
+                setIsMember(data);
+            }catch (error) {
+                console.error("Error fetching group user data:", error);
+            }
+        }
+        fetchToIsMember();
+    }, [groupId]);
+    // Format the creation date for display
+    const formatCreationDate = (dateString) => {
+        try {
+            return formatDistance(new Date(dateString), new Date(), {
+                addSuffix: true,
+            });
+        } catch (e) {
+            console.error("Error formatting date:", e);
+            return "Unknown date";
+        }
+    };
+    // Handle joining the group
+    const handleJoinPublicGroup = async () => {
+        try {
+            const result = await joinPublicGroup(groupId);
+
+            if (result) {
+                setIsMember(true);
+                setCanViewContent(true);
+                // Refresh the group details
+                await fetchGroupDetails(groupId, true);
+            }
+        } catch (error) {
+            console.error("Error joining group:", error);
+            showToast("Failed to join the group", "error");
+
+                <className="text-red-500 mb-4">
+                    <p className="mb-2">Error loading group details</p>
+                    <p>{error || "Group not found"}</p>
+                </div>
+                <button
+                    onClick={() => fetchGroupDetails(groupId, )}
+                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
+    
+    return (
+        <>
+            {/* Group Header */}
+            <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
+                {/* Cover photo */}
+                <div className="h-48 relative bg-gray-200">
+                    <Image
+                        src={groupDetails.image || '/group.png'}
+                        alt={groupDetails.groupName}
+                        fill
+                    className="object-cover"
+                        priority
+                        onError={() => {
+                            console.log("Image load error, replacing with fallback");
+                            // This will be handled by Next.js's built-in error handling
+                        }}
+  "          "      />
+                </div>                {/* Group info */}
+                <div className="p-4">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h1 className="
+                                text-2xl font-bold">{groupDetails.groupName
+                            }</h1>
+                            <p className="text-sm text-gray-500 flex items-center mt-1">
+                                <span
+                               {" "}
+    className={ `mr-2 w-2 h-2 rounded-full ${
+                                        groupDetails.visibility.toLowerCase() === "public"
+                                            ? "bg-green-500"
+                                        
+                                    : "bg-gray-500"
+   
+                                                             }`}
+                                ></span>
+                                {groupDetails.visibility.charAt(0).toUpperCase() +
+                                    groupDetails.visibility.slice(1).toLowerCase()}{" "}
+                                Group • {
+g                                       roupDetails.memberCount.toLocaleString()}{" "}
+                                members
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Created {formatCreationDate(groupDetails.crea
+                                    tedAt)}
+ 
+                                                               </p>
+                        </div>
+
+          
+                                                 
+                                             {isMember ? (
+                            <button class{"N"}
+                                ame="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 rounded-md">
+                                Joined
+                            </button>
+                        ) : (
+                            <button 
+                           {" "}
+                                    onClick={handleJoinGroup}
+                                className="px-4 py-1.5 bg-blue-500 hover:bg-blue-60                        {isMember ? (
+                            <button className="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 rounded-md">
+                                Đã tham gia    
+                            </button>
+                        ) : groupDetails.visibility.toLowerCase() ===
+                          "public" ? (
+                            <button
+                                onClick={handleJoinPublicGroup}
+                                className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
+                            >
+                                Tham gia ngay
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleJoinPrivateGroup}
+                                className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
+                            >
+                                Yêu cầu tham gia
+                            </button>
+                        )}                                ? "text-blue-500 border-b-2 border-blue-500"
+                                    : "text-gray-{"5"}
+00 hover:text-g ray-700"
+                            }`}
+                            onClick={() => setActiveTab("discussion")}
+                        >
+                            Discussion
+                        </button>
+                        <button
+                            className={`px-4 py-3 font-medium text-sm ${
+                                activeTab === "members"
+                                    ? "text-blue-500 border-b-2 border-blue-500"
+                                    : "text-gray-500 hover:text-gray-700"
+                            }`}
+                            onClick={() => setActiveTab("members")}
+                        >
+                            Members
+                        </button>
+                        <button
+                            className={`px-4 py-3 font-medium text-sm ${
+                                activeTab === "about"
+                                    ? "text-blue-500 border-b-2 border-blue-500"
+                                    : "text-gray-500 hover:text-gray-700"
+                            }`}
+                            onClick={() => setActiveTab("about")}
+                        >
+                            About
+                        </button>
+                        {/* Only show admin tabs if user is admin - will implement proper admin check later */}
+                        {false && (
+                            <>
+                                <button
+                                    className={`px-4 py-3 font-medium text-sm ${
+                                        activeTab === "report"
+                                            ? "text-blue-500 border-b-2 border-blue-500"
+                                            : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                                    onClick={() => setActiveTab("report")}
+                                >
+                                    Report
+                                </button>
+                                <button
+                                    className={`px-4 py-3 font-medium text-sm ${
+                                        activeTab === "pendingPosts"
+                                            ? "text-blue-500 border-b-2 border-blue-500"
+                                            : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                                    onClick={() => setActiveTab("pendingPosts")}
+                                >
+                                    Pending Posts
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>            </div>
+            
+            {/* Tab Content */}
+            {!canViewContent && groupDetails.visibility.toLowerCase() === "private" ? (
+                <div className="bg-white rounded-lg shadow p-8 mt-4 text-center">
+                    <div className="text-gray-500 mb-4">
+                        <p className="mb-2">This is a private group.</p>
+                        <p>You need to be a member to view it{"s"}
+ content.</ p>
+        </div>
+                    <button
+                        o
+n           Click={handleJoinGroup}
+                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+                    >
+                        Request to Join Group
+                    </button>
+                </div>
+            ) : (
+                <>                    {activeTab === "discussion" && (
+                        <div>
+                                     ) : (
+                       
+                     " "}
+                    {<div className="bg-white rounded-lg shadow p-8 text-center">
+                                                <p className="text-gray-500">
+                                                    No posts available in this group.
+                                                </p>
+                                                <button
+                                                    className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
+                                                    onClick={() => {
+                                                        // Add functionality to create a new post
+           
+                                                                                                showToast("Create a new post to get the discussion started!", "info");
+                                                    }}
+                                                >
+                                                    Create First Post
+                                                </button>
+                                            </div>
+                                        )}
+                                    <
+                                                            /div>
+                                </>
+       
+                                                                  
+                                                                      ) : (
+                                <div className="space-y-6 mt-3">
+                                    {posts.length > 0 ? (
+                                        posts.map((post) => (
+                                            <PostCard
+                                                key={post.id}
+                                                post={post}
+                                                onLike={() => {}} // No-op function since non-members can't like
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="bg-white rounded-lg shadow p-8 text-center">
+                                            <p className="text-gray-500">
+                                                No posts available in this group.
+                                            </p>
+                                            <button
+                                                onClick={() => setIsMember(true)}
+                                                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+                                            >
+                                                Join Group to 
+P                                               ost
+                                            </button>
+                                        </div>
+                                    )}
+                         
+                                                          </div>
+   
+                                                                         )}
+                        </div>
+                    )}{" "}                    {activeTab === "members" && (
+                        <div className="bg-white rounded-lg shadow p-4">
+                            <h2 className="text-lg font-semibold mb-4">
+                                Members ({groupDetails.memberCount})
+                            </h2>
+                            <div className="space-y-3">
+                                {/* We'll need to implement an API call 
+to fetch members */}
+                                {/* For now, display a placeholder */}
+                                <p className="text-center text-gray-500 py-4">
+                                    Member listing will be implemented in a future update.
+                                </p>
+                                <div className="flex justify-center">
+                                    <button 
+                                        onClick={() => showToast('Member listing coming soon!', 'info')}
+                                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
+                                    >
+
+                                                                           Refresh Members
+                                    </button>
+                                </div>
+                           </div>
+                        </div>
+              
+                                                 )}
+ 
+                                                "                  
+       " 
+                                                "    "
+                                             
+                                           {activeTab === "about" && (
+                        <div className="bg-white rounded-lg shadow p-4">
+                            <h2 className="text-lg font-semibold mb-4">About this Group</h2>
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-sm font-mroup Name</h3>
+                                    <p className="mt-1">{groupDetails.groupName}</p>
+                                </div>
+                                
+                    
+                                            <div                              </h2>
+    <h3 className="text-sm font-medium text-gray-500">Description</h3>
+                                    <p className="mt-1">{groupDetails.description}</p>
+                        
+                                                </
+                                    div>
+                                
+                       
+                                                 <div>
+                                    <h3 classNamptext-sm font-medium text-gray-500"></div>
+Privacy</h3>
+                                    <p className="mt-1 flex items-center">
+                                     
+                                           <span
+ 
+                                                                               className={`mr-2 w-2
+                                         h-2 rounded-full ${
+                                            p groupDetails.visibility.toLowerCas</div>
+e() === "public"
+                                                    ? "bg-green-500"
+                                       
+                                               
+                                          : "bg-gray-500"
+                                            }`}
+                                        ></span>
+                                        {groupDetails.visibility.charAt(0).toUpperCase() +
+                                            groupDetails.visibility.slice(1).toLowerCase()}
+                                               
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Created By</h3>
+                                    <p className="mt-
+                                            1">{groupD
+                                            etails.createdBy}</p>
+                                </div>
+                      
+                                                                                         <div>
+           .toLowerCase()}                         <h3 className="pt-sm font-medium text-gray-500">Cre</div>
+ated At</h3>
+                                    <p className="mt-1">
+                                        {new Date(group
+                                        Details.cr
+                                    eatedAt).toLocaleString()}
+                                   
+                                         </p>
+                                </div>
+                 p            
+                     </div>
+           <div>
+                                    <h3 className="text-sm font-medium text-gray-500">Member Count</h3>
+    
+                                                  
+                                                          <p className="mt-1">{groupDetails.memberCount.toLocaleString()} members</p>
+                
+                                                            </div                </div>
+                   ).toLocaleString()} <    /div>
+                    )}
+   p              {activeTab === "pendi</div>
+ngPosts" && (
+                        <div className="bg-white rounded-lg shadow p-4 mt-4">
+                            <h2 c
+                                        lassName="te
+                                    xt-lg font-semibold mb-4">
+                                Pos
+                                        ts Pending Approval
+                     }{" " 
+                                             </
+                                    h2>
+                            <div className="space-y-4">
+                                {pendingPosts.map((post) => (
+                                    <div
+                                        key={post.id}
+                                        className="border rounded-lg p-4"
+                                    >
+                                        <div className="flex items-center mb-3">
+                                            <Image
+                                                src={post.avatar}
+                                                alt={post.user}
+                                                width={40}
+                                                height={40}
+                                                className="rounded-full mr-3"
+                                            />
+                                            <div>
+                                                <p className="font-medium">
+                                                    {post.user}
+                                                </p>
+                                                <p className="text-sm text-gray-500">
+                                                    {post.time}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p className="mb-4">{post.content}</p>
+                                        {post.image && (
+                                            <div className="relative w-full h-96 mb-4">
+                                                <Image
+                                                    src={post.image}
+                                                    alt="Post content"
+                                                    fill
+                                                    className="rounded-lg object-cover"
+                                                />
+                                            </div>
+                                        )}
+                                        <div className="flex space-x-3">
+                                            <button
+                                                onClick={() =>
+                                                    handlePostApproval(
+                                                        post.id,
+                                                        true
+                                                    )
+                                                }
+                                                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                                            >
+                                                Accept
+                                            </button>
+                                            <button
+                                                onClick={() =>
+                                                    handlePostApproval(
+                                                        post.id,
+                                                        false
+                                                    )
+                                                }
+                                                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                                            >
+                                                Deny
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {pendingPosts.length === 0 && (
+                                    <p className="text-gray-500 text-center py-4">
+                                        No posts pending approval
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    {activeTab === "report" && (
+                        <GroupReport
+                            group={group}
+                            posts={posts}
+                            pendingPosts={pendingPosts}
+                        />
+                    )}
+                </>
+            )}
+        </>
+    );
+}
+

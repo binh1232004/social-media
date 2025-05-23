@@ -226,21 +226,7 @@ export function useGroupDetails({ groupId, onSuccess, onError } = {}) {
       approve: true,
       groupId: id
     };
-    const response = await fetch(`/api/proxy/group-members/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
-    if (!response.ok) {
-      const errorMessage = `Failed to fetch group details (${response.status})`;
-      setError(errorMessage);
-      showToast(errorMessage, 'error');
-      return null;
-    }
-    console.log('Group details fetched successfully for join:', response);
-    setIsJoining(true);
+  
     
     try {
       console.log(`Sending request to join group ID: ${id}`);
@@ -250,7 +236,7 @@ export function useGroupDetails({ groupId, onSuccess, onError } = {}) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ groupId: id }),
+        body: JSON.stringify(requestBody),
       });
       
       const data = await response.json();

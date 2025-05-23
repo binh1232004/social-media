@@ -36,7 +36,8 @@ export default function GroupCard({ group }) {  const { id, name, coverPhoto, me
       <div className="px-4 py-3 border-t">
         <Link href={`/group/${id}`}>
           <button className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
-            {privacy === "private" ? "Request to Join" : "Join Group"}
+            {/* {privacy === "private" ? "Request to Join" : "Join Group"} */}
+            Xem nhóm
           </button>
         </Link>
       </div>
