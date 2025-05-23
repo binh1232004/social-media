@@ -213,8 +213,6 @@ export default function GroupPage() {
                             posts={posts} 
                             setIsMember={setIsMember}
                             loading={postsLoading}
-                            hasMore={hasMore}
-                            loadMorePosts={loadMorePosts}
                             refreshPosts={refreshPosts}
                             groupId={groupId}
                         />
