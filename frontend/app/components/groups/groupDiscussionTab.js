@@ -4,15 +4,23 @@ import FeedSection from "@/app/components/feed/feedSection";
 import PostCard from "@/app/components/feed/postCardWithMedia";
 import GroupCreatePost from "@/app/components/groups/groupCreatePost";
 import { showToast } from "@/app/utils/toast";
+import { useGroupPosts } from "@/app/hooks/useGroupPosts";
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 export default function GroupDiscussionTab({ 
     isMember, 
-    posts, 
-    setIsMember, 
-    loading, 
-    refreshPosts,
     groupId
 }) {
+    // Use the hook directly in this component
+    const {
+        posts,
+        isLoading: loading,
+        error,
+        hasMore,
+        loadMorePosts,
+        refreshPosts
+    } = useGroupPosts(groupId);
+
     // Format posts to ensure media properties match what PostCard expects
     const formattedPosts = Array.isArray(posts) ? posts.map(post => {
         // Create a new post object with the correct structure
@@ -68,22 +76,38 @@ export default function GroupDiscussionTab({
                             refreshPosts={refreshPosts} 
                         />
                     </div>
-                    
-                    <div className="mt-4">
+                      <div className="mt-4">
                         {loading && formattedPosts.length === 0 ? (
                             <div className="flex justify-center py-8">
                                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                             </div>
-                        ) : formattedPosts.length > 0 ? (                            <div className="space-y-6">
-                                {formattedPosts.map((post) => (
-                                    <div key={post.id}>
-                                        <PostCard
-                                            post={post}
-                                            onLike={() => {}} // This would need to be implemented
-                                        />
+                        ) : formattedPosts.length > 0 ? (
+                            <InfiniteScroll
+                                dataLength={formattedPosts.length}
+                                next={loadMorePosts}
+                                hasMore={hasMore}
+                                loader={
+                                    <div className="flex justify-center py-4 my-4">
+                                        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
                                     </div>
-                                ))}
-                            </div>
+                                }
+                                endMessage={
+                                    <p className="text-center text-gray-500 py-4">
+                                        <b>You seen all posts in this group.</b>
+                                    </p>
+                                }
+                            >
+                                <div className="space-y-6">
+                                    {formattedPosts.map((post) => (
+                                        <div key={post.id}>
+                                            <PostCard
+                                                post={post}
+                                                onLike={() => {}} // This would need to be implemented
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </InfiniteScroll>
                         ) : (
                             <div className="bg-white rounded-lg shadow p-8 text-center">
                                 <p className="text-gray-500">
@@ -115,12 +139,7 @@ export default function GroupDiscussionTab({
                             <p className="text-gray-500">
                                 No posts available in this group.
                             </p>
-                            <button
-                                onClick={() => setIsMember(true)}
-                                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-                            >
-                                Join Group to Post
-                            </button>
+                            
                         </div>
                     )}                    
                     {/* Loading indicator */}

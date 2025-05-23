@@ -1,12 +1,28 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import EditProfileModal from "./editProfileModal";
+import { useFollow } from "../../hooks/useFollow";
+import { showToast } from "../../utils/toast";
 
 export default function ProfileHeader({ profileData, isOwnProfile = false, onProfileUpdate }) {
   const [isFollowing, setIsFollowing] = useState(false);
-  const [isFriend, setIsFriend] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { followUser, unfollowUser, checkFollowStatus, isLoading } = useFollow();
+  
+  useEffect(() => {
+    // Check if the current user is following this profile when the component mounts
+    const checkIfFollowing = async () => {
+      if (!isOwnProfile && profileData && profileData.userId) {
+        const followStatus = await checkFollowStatus(profileData.userId);
+        console.log("Follow status:", followStatus);
+        setIsFollowing(followStatus.isFollowing);
+      }
+    };
+    
+    checkIfFollowing();
+  }, [profileData, isOwnProfile, checkFollowStatus]);
   
   if (!profileData) {
     return null;
@@ -16,6 +32,31 @@ export default function ProfileHeader({ profileData, isOwnProfile = false, onPro
     // Call the parent component's update function if provided
     if (typeof onProfileUpdate === 'function') {
       onProfileUpdate();
+    }
+  };
+  
+  const handleFollowToggle = async () => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      if (isFollowing) {
+        // Unfollow the user
+        await unfollowUser(profileData.userId);
+        setIsFollowing(false);
+        showToast("Đã hủy theo dõi người dùng", "success");
+      } else {
+        // Follow the user
+        await followUser(profileData.userId);
+        setIsFollowing(true);
+        showToast("Đã theo dõi người dùng", "success");
+      }
+    } catch (error) {
+      console.error("Error toggling follow status:", error);
+      showToast("Có lỗi xảy ra. Vui lòng thử lại sau.", "error");
+    } finally {
+      setIsProcessing(false);
     }
   };
   
@@ -46,8 +87,7 @@ export default function ProfileHeader({ profileData, isOwnProfile = false, onPro
               {profileData.bio && (
                 <p className="text-gray-600 mt-2 max-w-md">{profileData.bio}</p>
               )}
-            </div>
-              <div className="flex space-x-2">
+            </div>              <div className="flex space-x-2">
               {isOwnProfile ? (
                 <button 
                   onClick={() => setIsEditModalOpen(true)}
@@ -58,15 +98,25 @@ export default function ProfileHeader({ profileData, isOwnProfile = false, onPro
               ) : (
                 <>
                   <button 
-                    onClick={() => setIsFriend(!isFriend)}
+                    onClick={handleFollowToggle}
+                    disabled={isProcessing}
                     className={`flex items-center rounded-md px-3 py-1.5 ${
-                      isFriend 
+                      isFollowing 
                         ? "bg-gray-200 hover:bg-gray-300" 
                         : "bg-blue-500 text-white hover:bg-blue-600"
                     }`}
                   >
-                    <span className="mr-1">{isFriend ? "✓" : "+"}</span>
-                    {isFriend ? "Friends" : "Add Friend"}
+                    {isProcessing ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                        <span>Đang xử lý...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="mr-1">{isFollowing ? "✓" : "+"}</span>
+                        {isFollowing ? "Đã theo dõi" : "Theo dõi"}
+                      </>
+                    )}
                   </button>
                 </>
               )}

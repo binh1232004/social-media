@@ -82,7 +82,7 @@ export default function UserSuggestionCard({ user, onFollowToggle }) {
       <div className="pt-16 pb-6 px-5">
         <div className="text-center mb-4">
           <Link href={`/user/${user.id}`} className="hover:underline group-hover:text-blue-600 transition-colors duration-200">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white">{user.fullName}</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white">{user.fullName || user.username}</h3>
           </Link>
           
           {user.username && (

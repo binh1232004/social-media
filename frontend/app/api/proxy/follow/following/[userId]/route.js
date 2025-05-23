@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import axios from "axios";
 import { cookies } from "next/headers";
 import https from "https";
-import { group } from "console";
 
 const TOKEN_NAME = "authToken";
 
@@ -18,12 +17,10 @@ const httpsAgent = new https.Agent({
 });
 
 /**
- * Route handler for post voting (like/unlike)
- * Using documentation from:
- * POST /api/posts/{postId}/vote
- * Toggles a vote on a specific post
+ * Route handler for retrieving users that the specified user is following
+ * GET /api/follow/following/{userId} - Get users following
  */
-export async function POST(request, { params }) {
+export async function GET(request, { params }) {
     try {
         // Get authentication token
         const token = getTokenFromServerCookies();
@@ -34,45 +31,49 @@ export async function POST(request, { params }) {
                 { status: 401 }
             );
         }
+
+        const { searchParams } = new URL(request.url);
+        const userId = params.userId;
+        const skip = searchParams.get('skip') || 0;
+        const take = searchParams.get('take') || 10;
         
-        const requestBody = await request.json();
-        
-        // Validate request body
-        if(!requestBody.groupId) {
+        // Validate userId
+        if (!userId) {
             return NextResponse.json(
-                { error: "groupId is required" },
+                { error: "userId is required" },
                 { status: 400 }
             );
         }
 
-        const apiUrlRequest = `${process.env.NEXT_PUBLIC_FQDN_BACKEND}/api/group-members/request`;
+        // Fetch users following
+        const apiUrl = `${process.env.NEXT_PUBLIC_FQDN_BACKEND}/api/Follows/following/${userId}`;
         
-        const responseRequest = await axios.post(
-            apiUrlRequest,
-            {groupId: requestBody.groupId}, 
+        const response = await axios.get(
+            apiUrl,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
+                params: {
+                    skip,
+                    take
+                },
                 httpsAgent, // Use the agent that ignores certificate validation
             }
         );
-        
-        // Return the response from the first API call
-        return NextResponse.json(responseRequest.data, { status: responseRequest.status });
-        
+
+        return NextResponse.json(response.data, { status: response.status });
     } catch (error) {
-        console.error("Error in group-members route:", error);
+        console.error("Error in get following users route:", error);
         
         if (error.response) {
             return NextResponse.json(
-                { error: error.response.data.message || "An error occurred" },
+                { error: error.response.data.error || "Error retrieving following users" },
                 { status: error.response.status }
             );
         }
         
-        // Always return a response for unexpected errors
         return NextResponse.json(
             { error: error.message || "An unexpected error occurred" },
             { status: 500 }

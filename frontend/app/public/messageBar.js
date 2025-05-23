@@ -1,14 +1,19 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Entity from "../components/asideChat/entity";
+import { useFollowing } from "../hooks/useFollowing";
+import { getUserInfo } from "../utils/auth";
 
 export default function MessageBar() {
-    const user = 4;
+    // Replace mock user count with real data from API
     const [selectedEntity, setSelectedIndexEntity] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
+    
+    // Use the hook to fetch following users
+    const { followingUsers, isLoading, error, hasMore, loadMore } = useFollowing(0, 20);
 
-    const handleClickEntity = (order) => {
-        setSelectedIndexEntity(order);
+    const handleClickEntity = (id) => {
+        setSelectedIndexEntity(id);
     };
 
     useEffect(() => {
@@ -54,43 +59,62 @@ export default function MessageBar() {
                 } md:translate-x-0 md:hidden lg:block border-l border-gray-100`}
                 aria-label="Sidebar"
             >
-                <div className="h-full px-4 py-4 hover:overflow-y-auto py-20 scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                <div className="h-full px-4 py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300 scrollbar-track-transparent">
                     {" "}
                     <div className="sticky top-0 bg-white/95 backdrop-blur-sm pb-4 -mx-4 px-4 border-b border-gray-100">
                         <div className="flex justify-between items-center py-2">
                             <div className="flex items-center space-x-3">
-                                <div className="p-1.5 bg-blue-50 rounded-lg">
-                                    <img
-                                        src="/messenger.png"
-                                        className="h-6 sm:h-7 transition-transform group-hover:scale-105"
-                                        alt="Messenger Logo"
-                                    />
-                                </div>
                                 <span className="text-lg font-semibold text-gray-700">
                                     Người liên hệ
                                 </span>
                             </div>
-                            <div className="flex w-10 h-10 justify-center items-center rounded-full hover:bg-blue-50 transition-colors duration-200 cursor-pointer">
-                                <img
-                                    src="/search.png"
-                                    className="w-5 h-5 opacity-60 hover:opacity-100"
-                                    alt="Search"
-                                />
-                            </div>
+                            
                         </div>
                     </div>
                     <div className="mt-4 space-y-1">
-                        {[...Array(user)].map((_, index) => (
-                            <Entity
-                                key={index}
-                                name={`Full name ${index + 1}`}
-                                notificationCount={index + 1}
-                                id={index + 1}
-                                onClick={() => handleClickEntity(index + 1)}
-                                selectedIndexEntity={selectedEntity}
-                                setSelectedIndexEntity={setSelectedIndexEntity}
-                            />
-                        ))}{" "}
+                        {isLoading && followingUsers.length === 0 ? (
+                            <div className="flex justify-center py-4">
+                                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                        ) : error ? (
+                            <div className="text-center text-red-500 py-4">
+                                <p>Không thể tải danh sách liên hệ</p>
+                            </div>
+                        ) : followingUsers.length === 0 ? (
+                            <div className="text-center text-gray-500 py-4">
+                                <p>Chưa có người liên hệ nào</p>
+                            </div>
+                        ) : (
+                            followingUsers.map((followData) => {
+                                const user = followData.followed;
+                                return (
+                                    <Entity
+                                        key={user.userId}
+                                        name={user.fullName || user.username}
+                                        imageSrc={user.image}
+                                        id={user.userId}
+                                        notificationCount={0} // You may want to implement notification count from API
+                                        selectedIndexEntity={selectedEntity}
+                                        setSelectedIndexEntity={setSelectedIndexEntity}
+                                    />
+                                );
+                            })
+                        )}
+                        
+                        {isLoading && followingUsers.length > 0 && (
+                            <div className="flex justify-center py-2">
+                                <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                        )}
+                        
+                        {hasMore && !isLoading && followingUsers.length > 0 && (
+                            <button 
+                                onClick={loadMore}
+                                className="w-full text-center text-sm text-blue-500 hover:text-blue-600 py-2"
+                            >
+                                Tải thêm
+                            </button>
+                        )}
                     </div>
                 </div>
             </aside>

@@ -5,16 +5,30 @@
 import { formatDistanceToNowStrict } from 'date-fns'; // Keep if used for anything else, or remove
 import PendingPostItem from './PendingPostItem'; // Import the new component
 import InfiniteScroll from 'react-infinite-scroll-component';
+import { usePendingGroupPosts } from "@/app/hooks/usePendingGroupPosts";
 
 export default function GroupPendingPostsTab({ 
-    pendingPosts, 
-    handlePostApproval, 
-    isLoading,
-    error,
-    hasMore,
-    loadMorePosts,
-    refreshPosts 
+    groupId,
+    handlePostApproval 
 }) {
+    // Use the hook directly in this component
+    const {
+        pendingPosts,
+        isLoading,
+        error,
+        hasMore,
+        loadMorePendingPosts: loadMorePosts,
+        refreshPendingPosts: refreshPosts,
+        removePostFromList
+    } = usePendingGroupPosts(groupId);
+    
+    // Wrap the external handlePostApproval to also update local state
+    const handlePostApprovalWithUI = async (postId, isApproved) => {
+        // Call the parent component's handler
+        await handlePostApproval(postId, isApproved);
+        // Update the local UI state
+        removePostFromList(postId);
+    };
     // const isAdmin = groupAdmins?.includes(currentUserId); // This logic is now in page.js
     console.log("Pending posts:", pendingPosts);
     if (isLoading && pendingPosts.length === 0) {
@@ -59,13 +73,12 @@ export default function GroupPendingPostsTab({
                 }
                 scrollableTarget="scrollableDiv" // Ensure your page layout has a scrollable container with this ID or adjust as needed
             >
-                <div className="space-y-4">
-                    {pendingPosts.map((post) => (
+                <div className="space-y-4">                    {pendingPosts.map((post) => (
                         <PendingPostItem 
                             key={post.id}
                             post={post} 
-                            onApprove={(postId) => handlePostApproval(postId, true)} 
-                            onDeny={(postId) => handlePostApproval(postId, false)}
+                            onApprove={(postId) => handlePostApprovalWithUI(postId, true)} 
+                            onDeny={(postId) => handlePostApprovalWithUI(postId, false)}
                         />
                     ))}
                     {pendingPosts.length === 0 && !isLoading && (

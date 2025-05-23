@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import axios from "axios";
 import { cookies } from "next/headers";
 import https from "https";
-import { group } from "console";
 
 const TOKEN_NAME = "authToken";
 
@@ -18,12 +17,10 @@ const httpsAgent = new https.Agent({
 });
 
 /**
- * Route handler for post voting (like/unlike)
- * Using documentation from:
- * POST /api/posts/{postId}/vote
- * Toggles a vote on a specific post
+ * Route handler for checking if a user is following another user
+ * GET /api/follow/check - Check follow status
  */
-export async function POST(request, { params }) {
+export async function GET(request) {
     try {
         // Get authentication token
         const token = getTokenFromServerCookies();
@@ -34,45 +31,53 @@ export async function POST(request, { params }) {
                 { status: 401 }
             );
         }
+
+        const { searchParams } = new URL(request.url);
+        const followerId = searchParams.get('followerId');
+        const followedId = searchParams.get('followedId');
         
-        const requestBody = await request.json();
-        
-        // Validate request body
-        if(!requestBody.groupId) {
+        // Validate request parameters
+        if (!followerId || !followedId) {
             return NextResponse.json(
-                { error: "groupId is required" },
+                { error: "followerId and followedId are required" },
                 { status: 400 }
             );
         }
 
-        const apiUrlRequest = `${process.env.NEXT_PUBLIC_FQDN_BACKEND}/api/group-members/request`;
+        // Check follow status
+        const apiUrl = `${process.env.NEXT_PUBLIC_FQDN_BACKEND}/api/Follows/is-following`;
         
-        const responseRequest = await axios.post(
-            apiUrlRequest,
-            {groupId: requestBody.groupId}, 
+        const response = await axios.get(
+            apiUrl,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
+                params: {
+                    followerId,
+                    followedId
+                },
                 httpsAgent, // Use the agent that ignores certificate validation
             }
         );
-        
-        // Return the response from the first API call
-        return NextResponse.json(responseRequest.data, { status: responseRequest.status });
-        
+
+        return NextResponse.json({ isFollowing: response.data }, { status: response.status });
     } catch (error) {
-        console.error("Error in group-members route:", error);
+        console.error("Error in check follow status route:", error);
+        
+        // If the API doesn't have this endpoint, assume not following
+        if (error.response && error.response.status === 404) {
+            return NextResponse.json({ isFollowing: false }, { status: 200 });
+        }
         
         if (error.response) {
             return NextResponse.json(
-                { error: error.response.data.message || "An error occurred" },
+                { error: error.response.data.error || "Error checking follow status" },
                 { status: error.response.status }
             );
         }
         
-        // Always return a response for unexpected errors
         return NextResponse.json(
             { error: error.message || "An unexpected error occurred" },
             { status: 500 }

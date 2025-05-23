@@ -58,10 +58,12 @@ export default function GroupHeader({
                                         : "bg-gray-500"
                                 }`}
                             ></span>
-                            {groupDetails.visibility.charAt(0).toUpperCase() +
+                            {/* {groupDetails.visibility.charAt(0).toUpperCase() +
                                 groupDetails.visibility.slice(1).toLowerCase()}{" "}
-                            Group • {groupDetails.memberCount.toLocaleString()}{" "}
-                            members
+                            Group •  */}
+                            Nhóm công khai{"\n"} 
+                            •{groupDetails.memberCount.toLocaleString()}{" "}
+                            thành viên
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
                             Created {formatCreationDate(groupDetails.createdAt)}
@@ -97,7 +99,6 @@ export default function GroupHeader({
                     )}
                 </div>
 
-                <p className="mt-3">{groupDetails.description}</p>
             </div>
             
             {/* Tabs */}
@@ -111,9 +112,9 @@ export default function GroupHeader({
                         }`}
                         onClick={() => setActiveTab("discussion")}
                     >
-                        Discussion
+                        Bài viết
                     </button>
-                    <button
+                    {/* <button
                         className={`px-4 py-3 font-medium text-sm ${
                             activeTab === "members"
                                 ? "text-blue-500 border-b-2 border-blue-500"
@@ -122,7 +123,7 @@ export default function GroupHeader({
                         onClick={() => setActiveTab("members")}
                     >
                         Members
-                    </button>
+                    </button> */}
                     <button
                         className={`px-4 py-3 font-medium text-sm ${
                             activeTab === "about"
@@ -131,7 +132,7 @@ export default function GroupHeader({
                         }`}
                         onClick={() => setActiveTab("about")}
                     >
-                        About
+                        Giới thiệu
                     </button>
                     {/* Only show admin tabs if user is admin - will implement proper admin check later */}
                     {isAdmin && (
@@ -144,7 +145,7 @@ export default function GroupHeader({
                                 }`}
                                 onClick={() => setActiveTab("report")}
                             >
-                                Report
+                                Báo cáo
                             </button>
                             <button
                                 className={`px-4 py-3 font-medium text-sm ${
@@ -154,7 +155,7 @@ export default function GroupHeader({
                                 }`}
                                 onClick={() => setActiveTab("pendingPosts")}
                             >
-                                Pending Posts
+                                Bài viết đang chờ duyệt
                             </button>
                         </>
                     )}

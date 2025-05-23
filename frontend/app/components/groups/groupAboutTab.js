@@ -39,12 +39,7 @@ export default function GroupAboutTab({ groupDetails }) {
                     </p>
                 </div>
                 
-                <div>
-                    <h3 className="text-sm font-medium text-gray-500">
-                        Created By
-                    </h3>
-                    <p className="mt-1">{groupDetails.createdBy}</p>
-                </div>
+                
                 
                 <div>
                     <h3 className="text-sm font-medium text-gray-500">
