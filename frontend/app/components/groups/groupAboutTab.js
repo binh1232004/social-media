@@ -3,28 +3,20 @@
 export default function GroupAboutTab({ groupDetails }) {
     return (
         <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-4">
-                About this Group
-            </h2>
             
             <div className="space-y-4">
                 <div>
                     <h3 className="text-sm font-medium text-gray-500">
-                        Group Name
+                        Tên nhóm
                     </h3>
                     <p className="mt-1">{groupDetails.groupName}</p>
                 </div>
                 
-                <div>
-                    <h3 className="text-sm font-medium text-gray-500">
-                        Description
-                    </h3>
-                    <p className="mt-1">{groupDetails.description}</p>
-                </div>
+                
                 
                 <div>
                     <h3 className="text-sm font-medium text-gray-500">
-                        Privacy
+                        Chế độ
                     </h3>
                     <p className="mt-1 flex items-center">
                         <span
@@ -34,8 +26,9 @@ export default function GroupAboutTab({ groupDetails }) {
                                     : "bg-gray-500"
                             }`}
                         ></span>
-                        {groupDetails.visibility.charAt(0).toUpperCase() +
-                            groupDetails.visibility.slice(1).toLowerCase()}
+                        {/* {groupDetails.visibility.charAt(0).toUpperCase() +
+                            groupDetails.visibility.slice(1).toLowerCase()} */}
+                        Công khai
                     </p>
                 </div>
                 
@@ -43,7 +36,7 @@ export default function GroupAboutTab({ groupDetails }) {
                 
                 <div>
                     <h3 className="text-sm font-medium text-gray-500">
-                        Created At
+                        Ngày tạo
                     </h3>
                     <p className="mt-1">
                         {new Date(groupDetails.createdAt).toLocaleString()}
@@ -52,10 +45,10 @@ export default function GroupAboutTab({ groupDetails }) {
                 
                 <div>
                     <h3 className="text-sm font-medium text-gray-500">
-                        Member Count
+                        Thành viên
                     </h3>
                     <p className="mt-1">
-                        {groupDetails.memberCount.toLocaleString()} members
+                        {groupDetails.memberCount.toLocaleString()} thành viên
                     </p>
                 </div>
             </div>

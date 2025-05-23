@@ -37,7 +37,7 @@ export default function PendingPostItem({ post, onApprove, onDeny }) {
             showToast('Bài viết đã bị ẩn và từ chối', 'success');
         } catch (error) {
             console.error('Error handling post denial:', error);
-            showToast(error.message || 'Có lỗi xảy ra khi từ chối bài viết', 'error');
+            // showToast(error.message || 'Có lỗi xảy ra khi từ chối bài viết', 'error');
         } finally {
             setIsProcessing(false);
         }
@@ -109,20 +109,27 @@ export default function PendingPostItem({ post, onApprove, onDeny }) {
                                 </div>
                             ))}
                         </div>
-                    )}
-
-                    <div className="flex space-x-3 mt-4 pt-3 border-t">
+                    )}                    <div className="flex space-x-3 mt-4 pt-3 border-t">
                         <button
                             onClick={handleApprove}
-                            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75"
+                            disabled={isProcessing}
+                            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 disabled:bg-green-300 disabled:cursor-not-allowed"
                         >
                             Đồng ý
                         </button>
                         <button
                             onClick={handleDeny}
-                            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75"
+                            disabled={isProcessing}
+                            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75 disabled:bg-red-300 disabled:cursor-not-allowed flex items-center space-x-1"
                         >
-                            Từ chối
+                            {isProcessing ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <span>Đang xử lý...</span>
+                                </>
+                            ) : (
+                                'Từ chối'
+                            )}
                         </button>
                     </div>
                 </div>
