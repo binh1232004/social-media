@@ -156,13 +156,87 @@ export function useGroup({ onSuccess, onError } = {}) {
       setIsLoading(false);
     }
   };
-  
+    /**
+   * Search groups by name
+   * @param {Object} options - Search options
+   * @param {string} options.searchTerm - Term to search for in group names
+   * @param {number} options.page - Page number to fetch (default: 1)
+   * @param {number} options.pageSize - Number of groups per page (default: 10)
+   * @returns {Promise<Object>} Search results or error
+   */
+  const searchGroups = async ({ searchTerm, page = 1, pageSize = 10 } = {}) => {
+    if (!searchTerm || searchTerm.trim() === '') {
+      showToast('Please enter a search term', 'error');
+      return null;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const apiUrl = `/api/proxy/groups/search?searchTerm=${encodeURIComponent(searchTerm)}&page=${page}&pageSize=${pageSize}`;
+      
+      console.log(`Searching groups with URL: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        const errorMessage = data.error || 'Failed to search groups';
+        showToast(errorMessage, 'error');
+        
+        if (onError) {
+          onError(data);
+        }
+        
+        return null;
+      }
+
+      // Set the groups based on search results
+      if (Array.isArray(data)) {
+        setGroups(data);
+      } else if (data.groups && Array.isArray(data.groups)) {
+        setGroups(data.groups);
+      } else {
+        console.error('Unexpected search response format:', data);
+        setGroups([]);
+      }
+      
+      // Update pagination information
+      setPagination({
+        totalGroups: data.totalGroups || data.total || (Array.isArray(data) ? data.length : 0),
+        totalPages: data.totalPages || Math.ceil((data.totalGroups || data.total || (Array.isArray(data) ? data.length : 0)) / pageSize) || 1,
+        currentPage: page,
+        pageSize
+      });
+      
+      return data;
+    } catch (error) {
+      showToast('Error searching groups', 'error');
+      console.error('Group search error:', error);
+      
+      if (onError) {
+        onError(error);
+      }
+      
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     groups,
     pagination,
     isLoading,
     createGroup,
     fetchGroups,
+    searchGroups,
     isCreating,
     // Keep the old method name for backward compatibility
     fetchToProxyApiCreateGroup: createGroup

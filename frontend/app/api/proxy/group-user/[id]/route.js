@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import axios from "axios";
 import { cookies } from "next/headers";
 import https from "https";
-import { group } from "console";
 
 const TOKEN_NAME = "authToken";
 
@@ -12,10 +11,6 @@ function getTokenFromServerCookies() {
     return cookieStore.get(TOKEN_NAME)?.value || null;
 }
 
-// Create HTTPS agent to ignore SSL certificate validation
-const httpsAgent = new https.Agent({
-    rejectUnauthorized: false, // Ignore SSL certificate validation
-});
 
 export async function GET(request, { params }) {
   try {
